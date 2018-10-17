@@ -1,0 +1,28 @@
+  stubs:
+  - className : example.contract.YamlRestResourceInterface
+    methodName : getDto
+    cases :
+      - request :
+          methodParameters :
+            - matchType : EXACT
+              value : hi
+          headerParameters:
+            - headerName : Authorization
+              headerValue :
+                matchType: NOT_NULL
+        response:
+          body: |
+                {
+                   "field" : "json field",
+                   "otherField" : 10
+                }
+
+      - request :
+          methodParameters :
+            - matchType: ANY
+        response:
+          body: |
+                {
+                   "field" : "any field",
+                   "otherField" : 77
+                }
