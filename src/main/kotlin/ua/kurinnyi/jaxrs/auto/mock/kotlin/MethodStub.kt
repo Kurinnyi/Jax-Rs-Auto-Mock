@@ -25,6 +25,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
             body != null -> body
             bodyJson != null -> ObjectMapper().readValue(bodyJson, method.returnType)
             bodyJsonJersey != null -> JerseyInternalsFilter.prepareResponse(method, bodyJsonJersey!!)
+            bodyProvider != null -> bodyProvider!!()
             else -> null
         }
     }
@@ -34,6 +35,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     internal var body: Any? = null
     internal var bodyJson: String? = null
     internal var bodyJsonJersey: String? = null
+    internal var bodyProvider: (() -> Any?)? = null
     internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
 
     class ArgumentMatcher(internal val matchType: MatchType, internal val matcher: (Any?) -> Boolean)
