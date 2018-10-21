@@ -47,5 +47,6 @@ jar {
         attributes 'Implementation-Title': 'JAX RS Automatic Mocking',
                 'Implementation-Version': version
     }
+    from "LICENSE"
 }
 
