@@ -8,12 +8,14 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.1'
     }
 }
 
 plugins {
     id 'java'
     id "org.jetbrains.kotlin.jvm" version "1.2.71"
+    id 'com.github.johnrengelman.shadow' version '4.0.1'
 }
 
 version = '0.1'
@@ -28,11 +30,28 @@ repositories {
 }
 
 dependencies {
+    compile 'org.apache.tomcat.embed:tomcat-embed-core:8.0.15'
+    compile 'org.apache.tomcat.embed:tomcat-embed-logging-juli:8.0.15'
+    compile 'org.apache.tomcat.embed:tomcat-embed-jasper:8.0.15'
+
+    compile 'org.glassfish.jersey.core:jersey-common:2.13'
+    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.13'
+    compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.13'
+
+    compile 'com.fasterxml.jackson.core:jackson-core:2.9.6'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.6'
+    compile 'com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.6'
+
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.+"
     compile "org.jetbrains.kotlin:kotlin-stdlib"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "ua.kurinnyi.jaxrs.auto.mock.runtime:jax-rs-auto-mock-runtime:0.1"
-    compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.13'
-//    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.6'
+    compile "org.jetbrains.kotlin:kotlin-reflect"
+
+    compile 'org.reflections:reflections:0.9.11'
+    compile 'commons-io:commons-io:2.4'
+
+    compile "ua.kurinnyi.kotlin:pattern-matching:0.1"
     compile "ua.kurinnyi.jaxrs.auto.mock:jax-rs-auto-mock:0.1"
 }
 
