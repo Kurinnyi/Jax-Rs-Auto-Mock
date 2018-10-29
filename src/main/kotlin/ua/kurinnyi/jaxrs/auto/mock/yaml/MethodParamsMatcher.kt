@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest
 
 object MethodParamsMatcher {
 
-    fun isParamsMatches(methodReceivedParameters: Array<Any>?, request: YamlMethodStub.Request?, httpRequest: HttpServletRequest) =
+    fun isParamsMatches(methodReceivedParameters: Array<Any?>?, request: YamlMethodStub.Request?, httpRequest: HttpServletRequest) =
             if (request == null) {
                 true
             } else {
@@ -26,7 +26,7 @@ object MethodParamsMatcher {
         }
     }
 
-    private fun isMethodParamsMatches(methodReceivedParams: Array<Any>,
+    private fun isMethodParamsMatches(methodReceivedParams: Array<Any?>,
                                       methodExpectedParams: List<YamlMethodStub.RequestParameter>?,
                                       httpRequest: HttpServletRequest): Boolean {
         return methodExpectedParams == null ||

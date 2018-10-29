@@ -6,16 +6,16 @@ import java.util.*
 
 class MethodInvocationHandler(private val methodStubsLoader: MethodStubsLoader) : InvocationHandler {
 
-    override fun invoke(proxy: Any, method: Method, args: Array<Any>?): Any? =
+    override fun invoke(proxy: Any, method: Method, args: Array<Any?>?): Any? =
             when (method.name) {
                 "hashCode" -> proxy.javaClass.name.hashCode()
                 "equals" -> proxy === args!![0]
                 "toString" -> getInterfaceName(proxy)
                 else -> findMatchingStub(method, args, proxy)
-                        .produceResponse(method, ContextSaveFilter.response)
+                        .produceResponse(method, args, ContextSaveFilter.response)
             }
 
-    private fun findMatchingStub(method: Method, args: Array<Any>?, proxy: Any): ResourceMethodStub {
+    private fun findMatchingStub(method: Method, args: Array<Any?>?, proxy: Any): ResourceMethodStub {
         val stubs = methodStubsLoader.getStubs()
         val interfaceName = getInterfaceName(proxy)
         checkIfClassIsStubbed(stubs, interfaceName)

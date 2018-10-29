@@ -10,13 +10,13 @@ data class MethodStubsHolder(val stubs: List<YamlMethodStub>)
 data class FlatYamlMethodStub(val className: String, val methodName: String, val case: YamlMethodStub.Case) : ResourceMethodStub {
     override fun getStubbedClassName() = className
 
-    override fun isMatchingMethod(method: Method, args: Array<Any>?, request: HttpServletRequest): Boolean {
+    override fun isMatchingMethod(method: Method, args: Array<Any?>?, request: HttpServletRequest): Boolean {
         return method.declaringClass.name == className
                 && method.name == methodName
                 && MethodParamsMatcher.isParamsMatches(args, case.request, request)
     }
 
-    override fun produceResponse(method: Method, response: HttpServletResponse): Any? {
+    override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
         return ResponseFromStubCreator.getResponseObject(method, case.response, response)
     }
 

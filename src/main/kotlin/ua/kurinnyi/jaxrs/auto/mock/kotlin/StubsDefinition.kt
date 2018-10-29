@@ -136,7 +136,7 @@ class MethodStubDefinitionResponseContext<RESPONSE>(private val methodStubs: Lis
 
     fun bodyJson(bodyProvider: BodyProvider, body: String) = methodStubs.forEach { it.bodyJson = body; it.bodyJsonProvider = bodyProvider }
 
-    fun bodyProvider(bodyProvider: () -> RESPONSE?) = methodStubs.forEach { it.bodyProvider = bodyProvider }
+    fun bodyProvider(bodyProvider: (Array<Any?>) -> RESPONSE?) = methodStubs.forEach { it.bodyProvider = bodyProvider }
 
     fun header(headerName: String, headerValue: String) = methodStubs.forEach {
         it.responseHeaders[headerName] = headerValue

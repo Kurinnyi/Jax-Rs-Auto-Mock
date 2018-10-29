@@ -10,18 +10,18 @@ import javax.servlet.http.HttpServletResponse
 class MethodStub(private val clazz: Class<*>, private val method: Method, val arguments: List<ArgumentMatcher>) : ResourceMethodStub {
     override fun getStubbedClassName(): String = clazz.name
 
-    override fun isMatchingMethod(method: Method, args: Array<Any>?, request: HttpServletRequest): Boolean {
+    override fun isMatchingMethod(method: Method, args: Array<Any?>?, request: HttpServletRequest): Boolean {
         return method == this.method && paramMatch(args, request) && headersMatch(request)
     }
 
-    override fun produceResponse(method: Method, response: HttpServletResponse): Any? {
+    override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
         responseHeaders.forEach { (name, value) -> response.addHeader(name, value) }
         code?.let {
             response.status = it
             response.flushBuffer()
         }
         return when {
-            bodyProvider != null -> bodyProvider!!()
+            bodyProvider != null -> bodyProvider!!(args ?: emptyArray())
             bodyJsonProvider != null -> bodyJsonProvider!!.provideBodyObject(method.returnType, method.genericReturnType, bodyJson!!)
             else -> null
         }
@@ -29,7 +29,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
 
     internal val requestHeaders: MutableList<HeaderParameter> = mutableListOf()
     internal var code: Int? = null
-    internal var bodyProvider: (() -> Any?)? = null
+    internal var bodyProvider: ((Array<Any?>) -> Any?)? = null
     internal var bodyJson: String? = null
     internal var bodyJsonProvider: BodyProvider? = null
     internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
@@ -48,7 +48,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
         }
     }
 
-    private fun paramMatch(args: Array<Any>?, request: HttpServletRequest): Boolean {
+    private fun paramMatch(args: Array<Any?>?, request: HttpServletRequest): Boolean {
         return if (args == null) {
             arguments.isEmpty()
         } else {
