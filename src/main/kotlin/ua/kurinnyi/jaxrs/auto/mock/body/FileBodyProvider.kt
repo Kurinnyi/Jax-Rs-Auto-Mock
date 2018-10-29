@@ -1,8 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.body
 
 import org.apache.commons.io.IOUtils
+import ua.kurinnyi.jaxrs.auto.mock.StubNotFoundException
 import java.lang.reflect.Type
-import java.rmi.StubNotFoundException
 
 class FileBodyProvider(private val bodyProvider: BodyProvider) : BodyProvider {
     override fun <T> provideBodyObject(type: Class<T>, genericType: Type, body: String): T {
