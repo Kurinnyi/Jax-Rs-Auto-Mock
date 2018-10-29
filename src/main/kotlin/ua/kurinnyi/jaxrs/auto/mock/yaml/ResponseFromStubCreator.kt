@@ -1,7 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock.yaml
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import ua.kurinnyi.jaxrs.auto.mock.JerseyInternalsFilter
+import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse
 
@@ -27,11 +27,8 @@ object ResponseFromStubCreator {
                     Double::class.java -> body.toDouble()
                     ByteArray::class.java -> body.toByteArray()
                     else -> {
-                        if (useJerseyDeserialization)
-                            JerseyInternalsFilter.prepareResponse(method, body)
-                        else {
-                            ObjectMapper().readValue(body, method.returnType)
-                        }
+                        val bodyProvider = if (useJerseyDeserialization) JerseyInternalBodyProvider else JacksonBodyProvider
+                        bodyProvider.provideBodyObject(method.returnType, method.genericReturnType, body)
                     }
                 }
             } catch (e: Exception) {

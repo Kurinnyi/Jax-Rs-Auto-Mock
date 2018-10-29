@@ -1,6 +1,10 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
 import ua.kurinnyi.jaxrs.auto.mock.Utils
+import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
@@ -128,11 +132,9 @@ class MethodStubDefinitionResponseContext<RESPONSE>(private val methodStubs: Lis
 
     fun code(code: Int): Unit = methodStubs.forEach { it.code = code }
 
-    fun body(body: RESPONSE) = methodStubs.forEach { it.body = body }
+    fun body(body: RESPONSE) = bodyProvider{ body }
 
-    fun bodyJson(body: String) = methodStubs.forEach { it.bodyJson = body }
-
-    fun bodyJsonJersey(body: String) = methodStubs.forEach { it.bodyJsonJersey = body }
+    fun bodyJson(bodyProvider: BodyProvider, body: String) = methodStubs.forEach { it.bodyJson = body; it.bodyJsonProvider = bodyProvider }
 
     fun bodyProvider(bodyProvider: () -> RESPONSE?) = methodStubs.forEach { it.bodyProvider = bodyProvider }
 
@@ -140,3 +142,6 @@ class MethodStubDefinitionResponseContext<RESPONSE>(private val methodStubs: Lis
         it.responseHeaders[headerName] = headerValue
     }
 }
+typealias BY_JACKSON = JacksonBodyProvider
+typealias BY_JERSEY = JerseyInternalBodyProvider
+typealias FROM_FILE = FileBodyProvider

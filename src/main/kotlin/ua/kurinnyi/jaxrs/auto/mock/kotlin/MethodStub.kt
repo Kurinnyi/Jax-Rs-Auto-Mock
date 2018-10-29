@@ -1,9 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import ua.kurinnyi.jaxrs.auto.mock.JerseyInternalsFilter
 import ua.kurinnyi.jaxrs.auto.mock.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
+import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -22,20 +21,17 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
             response.flushBuffer()
         }
         return when {
-            body != null -> body
-            bodyJson != null -> ObjectMapper().readValue(bodyJson, method.returnType)
-            bodyJsonJersey != null -> JerseyInternalsFilter.prepareResponse(method, bodyJsonJersey!!)
             bodyProvider != null -> bodyProvider!!()
+            bodyJsonProvider != null -> bodyJsonProvider!!.provideBodyObject(method.returnType, method.genericReturnType, bodyJson!!)
             else -> null
         }
     }
 
     internal val requestHeaders: MutableList<HeaderParameter> = mutableListOf()
     internal var code: Int? = null
-    internal var body: Any? = null
-    internal var bodyJson: String? = null
-    internal var bodyJsonJersey: String? = null
     internal var bodyProvider: (() -> Any?)? = null
+    internal var bodyJson: String? = null
+    internal var bodyJsonProvider: BodyProvider? = null
     internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
 
     class ArgumentMatcher(internal val matchType: MatchType, internal val matcher: (Any?) -> Boolean)
