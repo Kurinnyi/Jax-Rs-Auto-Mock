@@ -138,6 +138,8 @@ class MethodStubDefinitionResponseContext<RESPONSE>(private val methodStubs: Lis
 
     fun bodyProvider(bodyProvider: (Array<Any?>) -> RESPONSE?) = methodStubs.forEach { it.bodyProvider = bodyProvider }
 
+    fun proxyTo(path: String) = methodStubs.forEach { it.proxyPath = path }
+
     fun header(headerName: String, headerValue: String) = methodStubs.forEach {
         it.responseHeaders[headerName] = headerValue
     }

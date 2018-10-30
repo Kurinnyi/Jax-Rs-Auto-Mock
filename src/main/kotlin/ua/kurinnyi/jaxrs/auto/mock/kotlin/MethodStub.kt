@@ -3,11 +3,21 @@ package ua.kurinnyi.jaxrs.auto.mock.kotlin
 import ua.kurinnyi.jaxrs.auto.mock.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.RequestProxy
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 class MethodStub(private val clazz: Class<*>, private val method: Method, val arguments: List<ArgumentMatcher>) : ResourceMethodStub {
+
+    internal val requestHeaders: MutableList<HeaderParameter> = mutableListOf()
+    internal var code: Int? = null
+    internal var bodyProvider: ((Array<Any?>) -> Any?)? = null
+    internal var bodyJson: String? = null
+    internal var bodyJsonProvider: BodyProvider? = null
+    internal var proxyPath: String? = null
+    internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
+
     override fun getStubbedClassName(): String = clazz.name
 
     override fun isMatchingMethod(method: Method, args: Array<Any?>?, request: HttpServletRequest): Boolean {
@@ -23,16 +33,13 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
         return when {
             bodyProvider != null -> bodyProvider!!(args ?: emptyArray())
             bodyJsonProvider != null -> bodyJsonProvider!!.provideBodyObject(method.returnType, method.genericReturnType, bodyJson!!)
+            proxyPath != null -> {
+                RequestProxy.forwardRequest(proxyPath!!)
+                null
+            }
             else -> null
         }
     }
-
-    internal val requestHeaders: MutableList<HeaderParameter> = mutableListOf()
-    internal var code: Int? = null
-    internal var bodyProvider: ((Array<Any?>) -> Any?)? = null
-    internal var bodyJson: String? = null
-    internal var bodyJsonProvider: BodyProvider? = null
-    internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
 
     class ArgumentMatcher(internal val matchType: MatchType, internal val matcher: (Any?) -> Boolean)
 
