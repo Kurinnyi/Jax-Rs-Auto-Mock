@@ -64,10 +64,12 @@ object RequestProxy {
         }
     }
 
-    private fun safeCopy(inputStream1: InputStream?, outputStream1: OutputStream?) {
+    private fun safeCopy(inputStream1: InputStream, outputStream1: OutputStream) {
         inputStream1.use { inputStream ->
             outputStream1.use { outputStream ->
+                outputStream.flush()
                 IOUtils.copy(inputStream, outputStream)
+                outputStream.flush()
             }
         }
     }
