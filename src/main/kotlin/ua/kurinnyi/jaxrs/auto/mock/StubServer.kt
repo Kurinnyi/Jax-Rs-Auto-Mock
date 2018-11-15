@@ -7,6 +7,8 @@ import org.apache.tomcat.util.descriptor.web.FilterMap
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import org.reflections.Reflections
+import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.AutoDiscoveryOfStubDefinitions
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.KotlinMethodStubsLoader
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.StubsDefinition
@@ -25,6 +27,8 @@ class StubServer {
     private val classesToRegister = HashSet<Class<*>>()
     private val stubDefinitions  = mutableListOf<StubsDefinition>()
     private var autoDiscoveryOfStubDefinitions  = true
+
+    private var proxyConfiguration:ProxyConfiguration  = NothingMatchedProxyConfiguration()
 
     fun setPort(port: Int): StubServer = this.apply{
         this.port = port
@@ -48,6 +52,10 @@ class StubServer {
 
     fun disableAutoDiscoveryOfStubDefinition():StubServer = this.apply {
         autoDiscoveryOfStubDefinitions = false
+    }
+
+    fun customProxyConfiguration(proxyConfiguration:ProxyConfiguration):StubServer = this.apply {
+        this.proxyConfiguration = proxyConfiguration
     }
 
     fun start() {
@@ -88,9 +96,9 @@ class StubServer {
         val stubDefinitions: List<StubsDefinition> = getStubDefinitions()
         ResponseFromStubCreator.useJerseyDeserialization = useJerseyDeserialization
         val methodStubsLoader = CompositeMethodStubLoader(
-                KotlinMethodStubsLoader(stubDefinitions),
+                KotlinMethodStubsLoader(stubDefinitions, proxyConfiguration),
                 YamlMethodStubsLoader())
-        return MethodInvocationHandler(methodStubsLoader)
+        return MethodInvocationHandler(methodStubsLoader, proxyConfiguration)
     }
 
     private fun getStubDefinitions(): List<StubsDefinition> {

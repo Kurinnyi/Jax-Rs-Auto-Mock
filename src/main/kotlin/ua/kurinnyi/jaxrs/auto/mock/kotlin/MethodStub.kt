@@ -3,7 +3,7 @@ package ua.kurinnyi.jaxrs.auto.mock.kotlin
 import ua.kurinnyi.jaxrs.auto.mock.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.RequestProxy
+import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse

@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.body
+package ua.kurinnyi.jaxrs.auto.mock.httpproxy
 
 import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.ContextSaveFilter
@@ -11,7 +11,6 @@ import javax.ws.rs.core.MultivaluedHashMap
 import javax.ws.rs.core.MultivaluedMap
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
-
 
 object RequestProxy {
 
@@ -28,7 +27,10 @@ object RequestProxy {
     private fun proxyRequest(path: String) {
         val request = ContextSaveFilter.request
         val requestHeaders = getRequestHeaders(request)
-        val builder = client.target(getUrl(path, request)).request()
+        val url = getUrl(path, request)
+        println("Proxying request ${request.method}:$url")
+        val builder = client.target(url).request()
+
         val clientResponse:Response = if (request.method == "GET"){
             requestHeaders.remove("content-length")
             builder.headers(requestHeaders).get()
@@ -38,8 +40,6 @@ object RequestProxy {
             }, request.contentType))
         }
 
-
-
         val servletResponse = ContextSaveFilter.response
         servletResponse.status = clientResponse.status
         clientResponse.headers.forEach{ header ->
@@ -47,7 +47,6 @@ object RequestProxy {
         }
         safeCopy(clientResponse.readEntity(InputStream::class.java), servletResponse.outputStream)
         servletResponse.flushBuffer()
-
     }
 
     private fun getRequestHeaders(request: HttpServletRequest): MultivaluedMap<String, Any> {

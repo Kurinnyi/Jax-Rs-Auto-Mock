@@ -5,6 +5,8 @@ import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
@@ -13,8 +15,21 @@ interface StubsDefinition {
     fun getStubs(context: StubDefinitionContext): List<MethodStub>
 }
 
-class StubDefinitionContext {
+class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
     internal val stubs: MutableList<MethodStub> = mutableListOf()
+    internal var proxyBypassPath:String? = null
+    internal var shouldBypassWhenNothingMatched:Boolean = false
+
+
+    fun bypassAnyNotMatched(path: String) {
+        shouldBypassWhenNothingMatched = true
+        proxyBypassPath = path
+    }
+
+    fun bypassAnyNotMatched() {
+        shouldBypassWhenNothingMatched = true
+    }
+
 
     fun createStubs(definitions: StubDefinitionContext.() -> Unit): List<MethodStub> {
         definitions(this)
@@ -22,6 +37,9 @@ class StubDefinitionContext {
     }
 
     fun <RESOURCE : Any> forClass(clazz: KClass<RESOURCE>, definitions: ClazzStubDefinitionContext<RESOURCE>.() -> Unit) {
+        if (shouldBypassWhenNothingMatched){
+            proxyConfiguration.addClass(clazz.java.name, proxyBypassPath)
+        }
         definitions(ClazzStubDefinitionContext(clazz.java, this))
     }
 }
@@ -29,6 +47,14 @@ class StubDefinitionContext {
 class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, private val context: StubDefinitionContext) {
     private var tempArgList: List<MethodStub.ArgumentMatcher> = listOf()
     private var methodStubs: List<MethodStub> = listOf()
+
+    fun bypassAnyNotMatched(path: String) {
+        context.proxyConfiguration.addClass(clazz.name, path)
+    }
+
+    fun bypassAnyNotMatched() {
+        context.proxyConfiguration.addClass(clazz.name, null)
+    }
 
     fun <RESULT> whenRequest(methodCall: RESOURCE.() -> RESULT): MethodStubDefinitionRequestContext<RESULT> {
         methodStubs = listOf()
