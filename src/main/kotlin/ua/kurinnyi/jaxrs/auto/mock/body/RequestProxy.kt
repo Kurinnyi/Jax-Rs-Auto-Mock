@@ -4,65 +4,65 @@ import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.ContextSaveFilter
 import java.io.InputStream
 import java.io.OutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.client.ClientBuilder
+import javax.ws.rs.client.Entity
+import javax.ws.rs.core.MultivaluedHashMap
+import javax.ws.rs.core.MultivaluedMap
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 
 object RequestProxy {
 
+    init {
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+    }
+
+    private val client = ClientBuilder.newClient()
+
     fun forwardRequest(path: String) {
-        val connection = proxyRequest(path)
-        proxyResponse(connection)
+        proxyRequest(path)
     }
 
-    private fun proxyRequest(path: String): HttpURLConnection {
+    private fun proxyRequest(path: String) {
         val request = ContextSaveFilter.request
-        val connection = formatNewUrl(path, request).openConnection() as HttpURLConnection
-        connection.requestMethod = request.method
-
-        copyRequestHeaders(request, connection)
-
-        //conn.setFollowRedirects(false);
-        connection.useCaches = false
-        connection.doInput = true
-        connection.doOutput = true
-        connection.connect()
-        if (setOf("PUT", "POST").contains(request.method)){
-            safeCopy(request.inputStream, connection.outputStream)
+        val requestHeaders = getRequestHeaders(request)
+        val builder = client.target(getUrl(path, request)).request()
+        val clientResponse:Response = if (request.method == "GET"){
+            requestHeaders.remove("content-length")
+            builder.headers(requestHeaders).get()
+        } else {
+            builder.headers(requestHeaders).method(request.method, Entity.entity(StreamingOutput { stream: OutputStream ->
+                safeCopy(request.inputStream, stream)
+            }, request.contentType))
         }
-        return connection
+
+
+
+        val servletResponse = ContextSaveFilter.response
+        servletResponse.status = clientResponse.status
+        clientResponse.headers.forEach{ header ->
+            header.value.forEach{value -> servletResponse.setHeader(header.key, value.toString())}
+        }
+        safeCopy(clientResponse.readEntity(InputStream::class.java), servletResponse.outputStream)
+        servletResponse.flushBuffer()
+
     }
 
-    private fun proxyResponse(connection: HttpURLConnection) {
-        val response = ContextSaveFilter.response
-        response.status = connection.responseCode
-        copyResponseHeaders(connection, response)
-
-        safeCopy(connection.inputStream, response.outputStream)
-        response.flushBuffer()
-    }
-
-    private fun formatNewUrl(path: String, request: HttpServletRequest) =
-            URL(path + request.requestURI + (request.queryString?.let { "?$it" } ?: ""))
-
-    private fun copyResponseHeaders(connection: HttpURLConnection, response: HttpServletResponse) {
-        connection.headerFields
-                .filterKeys { it != null }
-                .forEach { (key, values) ->
-                    values.forEach{ headerValue -> response.setHeader(key, headerValue)}
-                }
-    }
-
-    private fun copyRequestHeaders(request: HttpServletRequest, connection: HttpURLConnection) {
+    private fun getRequestHeaders(request: HttpServletRequest): MultivaluedMap<String, Any> {
+        val headers: MultivaluedMap<String, Any> = MultivaluedHashMap()
         request.headerNames.iterator().forEach { headerName ->
             val values = request.getHeaders(headerName)
             values.iterator().forEach { headerValue ->
-                connection.addRequestProperty(headerName, headerValue)
+                headers.add(headerName, headerValue)
             }
         }
+        return headers
     }
+
+    private fun getUrl(path: String, request: HttpServletRequest) =
+            path + request.requestURI + (request.queryString?.let { "?$it" } ?: "")
 
     private fun safeCopy(inputStream1: InputStream, outputStream1: OutputStream) {
         inputStream1.use { inputStream ->
