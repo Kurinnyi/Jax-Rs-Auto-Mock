@@ -1,66 +1,63 @@
 package ua.kurinnyi.jaxrs.auto.mock.httpproxy
 
 import org.apache.commons.io.IOUtils
+import org.apache.http.client.methods.*
+import org.apache.http.entity.InputStreamEntity
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.message.BasicHeader
 import ua.kurinnyi.jaxrs.auto.mock.ContextSaveFilter
 import java.io.InputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletRequest
-import javax.ws.rs.client.ClientBuilder
-import javax.ws.rs.client.Entity
-import javax.ws.rs.core.MultivaluedHashMap
-import javax.ws.rs.core.MultivaluedMap
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
+
 
 object RequestProxy {
 
-    init {
-        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
-    }
-
-    private val client = ClientBuilder.newClient()
+    private val client = HttpClients.createDefault()
 
     fun forwardRequest(path: String) {
-        proxyRequest(path)
-    }
-
-    private fun proxyRequest(path: String) {
-        val request = ContextSaveFilter.request
-        val requestHeaders = getRequestHeaders(request)
-        val url = getUrl(path, request)
-        println("Proxying request ${request.method}:$url")
-        val builder = client.target(url).request()
-
-        val clientResponse:Response = if (request.method == "GET"){
-            requestHeaders.remove("content-length")
-            builder.headers(requestHeaders).get()
-        } else {
-            builder.headers(requestHeaders).method(request.method, Entity.entity(StreamingOutput { stream: OutputStream ->
-                safeCopy(request.inputStream, stream)
-            }, request.contentType))
-        }
-
+        val servletRequest = ContextSaveFilter.request
         val servletResponse = ContextSaveFilter.response
-        servletResponse.status = clientResponse.status
-        clientResponse.headers.forEach{ header ->
-            header.value.forEach{value -> servletResponse.setHeader(header.key, value.toString())}
-        }
-        safeCopy(clientResponse.readEntity(InputStream::class.java), servletResponse.outputStream)
+        val url = formatNewUrl(path, servletRequest)
+        println("Proxying request ${servletRequest.method}:$url")
+        val httpRequest = getHttpRequest(url, servletRequest)
+        addRequestHeaders(servletRequest, httpRequest)
+        val response = client.execute(httpRequest)
+        servletResponse.status = response.statusLine.statusCode
+        response.allHeaders.forEach{ servletResponse.setHeader(it.name, it.value)}
+        safeCopy(response.entity.content, servletResponse.outputStream)
         servletResponse.flushBuffer()
     }
 
-    private fun getRequestHeaders(request: HttpServletRequest): MultivaluedMap<String, Any> {
-        val headers: MultivaluedMap<String, Any> = MultivaluedHashMap()
+    private fun addRequestHeaders(request: HttpServletRequest, httpPost: HttpRequestBase) {
         request.headerNames.iterator().forEach { headerName ->
-            val values = request.getHeaders(headerName)
-            values.iterator().forEach { headerValue ->
-                headers.add(headerName, headerValue)
+            if (headerName.toLowerCase()  != "content-length") {
+                val values = request.getHeaders(headerName)
+                values.iterator().forEach { headerValue ->
+                    httpPost.setHeader(BasicHeader(headerName, headerValue))
+                }
             }
         }
-        return headers
     }
 
-    private fun getUrl(path: String, request: HttpServletRequest) =
+    private fun getHttpRequest(url: String, request: HttpServletRequest): HttpRequestBase {
+        val httpRequest: HttpRequestBase = when (request.method) {
+            "POST" -> HttpPost(url)
+            "PUT" -> HttpPut(url)
+            "DELETE" -> HttpDelete(url)
+            "PATCH" -> HttpPatch(url)
+            "HEAD" -> HttpHead(url)
+            "OPTIONS" -> HttpOptions(url)
+            "GET" -> HttpGet(url)
+            else -> throw IllegalStateException("Not supported http method ${request.method}")
+        }
+        if (httpRequest is HttpEntityEnclosingRequestBase){
+            httpRequest.entity = InputStreamEntity(request.inputStream)
+        }
+        return httpRequest
+    }
+
+    private fun formatNewUrl(path: String, request: HttpServletRequest) =
             path + request.requestURI + (request.queryString?.let { "?$it" } ?: "")
 
     private fun safeCopy(inputStream1: InputStream, outputStream1: OutputStream) {

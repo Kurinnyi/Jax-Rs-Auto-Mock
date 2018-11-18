@@ -16,7 +16,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.71"
 }
 
-version = '0.1.7'
+version = '0.1.8'
 group = "ua.kurinnyi.jaxrs.auto.mock"
 sourceCompatibility = 1.8
 
@@ -38,6 +38,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile "org.jetbrains.kotlin:kotlin-reflect"
     compile 'org.reflections:reflections:0.9.11'
+    compile "org.apache.httpcomponents:httpclient:4.5.6"
     compile "ua.kurinnyi.kotlin:pattern-matching:0.1"
 }
 
