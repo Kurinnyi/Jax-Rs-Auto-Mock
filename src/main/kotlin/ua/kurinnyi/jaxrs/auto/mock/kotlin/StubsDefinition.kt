@@ -5,7 +5,6 @@ import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -17,8 +16,8 @@ interface StubsDefinition {
 
 class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
     internal val stubs: MutableList<MethodStub> = mutableListOf()
-    internal var proxyBypassPath:String? = null
-    internal var shouldBypassWhenNothingMatched:Boolean = false
+    internal var proxyBypassPath: String? = null
+    internal var shouldBypassWhenNothingMatched: Boolean = false
 
 
     fun bypassAnyNotMatched(path: String) {
@@ -37,7 +36,7 @@ class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
     }
 
     fun <RESOURCE : Any> forClass(clazz: KClass<RESOURCE>, definitions: ClazzStubDefinitionContext<RESOURCE>.() -> Unit) {
-        if (shouldBypassWhenNothingMatched){
+        if (shouldBypassWhenNothingMatched) {
             proxyConfiguration.addClass(clazz.java.name, proxyBypassPath)
         }
         definitions(ClazzStubDefinitionContext(clazz.java, this))
@@ -77,11 +76,21 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
         }
     }
 
-    fun <ARGUMENT> eq(argument: ARGUMENT): ARGUMENT = matchNullable { it == argument }
+    fun <ARGUMENT> eq(argument: ARGUMENT): ARGUMENT {
+        matchNullable<ARGUMENT?> { it == argument }
+        return argument
+    }
 
-    fun <ARGUMENT> notEq(argument: ARGUMENT): ARGUMENT = matchNullable { it != argument }
+    fun <ARGUMENT> notEq(argument: ARGUMENT): ARGUMENT {
+        matchNullable<ARGUMENT?> { it != argument }
+        return argument
+    }
 
     fun <ARGUMENT> any(): ARGUMENT = matchNullable { true }
+    fun anyBoolean(): Boolean = matchPrimitive({ true }, true)
+    fun anyInt(): Int = matchPrimitive({ true }, 0)
+    fun anyDouble(): Double = matchPrimitive({ true }, 0.0)
+    fun anyLong(): Long = matchPrimitive({ true }, 0L)
 
     fun <ARGUMENT> isNull(): ARGUMENT = matchNullable { it == null }
 
@@ -95,6 +104,31 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
     fun <ARGUMENT> match(predicate: (ARGUMENT) -> Boolean): ARGUMENT = matchNullable { it != null && predicate(it) }
 
+    fun matchBoolean(predicate: (Boolean) -> Boolean): Boolean {
+        matchNullable<Boolean?> { it != null && predicate(it) }
+        return true
+    }
+
+    fun matchInt(predicate: (Int) -> Boolean): Int {
+        matchNullable<Int?> { it != null && predicate(it) }
+        return 0
+    }
+
+    fun matchDouble(predicate: (Double) -> Boolean): Double {
+        matchNullable<Double?> { it != null && predicate(it) }
+        return 0.0
+    }
+
+    fun matchLong(predicate: (Long) -> Boolean): Long {
+        matchNullable<Long?> { it != null && predicate(it) }
+        return 0L
+    }
+
+    private fun <ARGUMENT> matchPrimitive(predicate: (ARGUMENT?) -> Boolean, arg: ARGUMENT): ARGUMENT {
+        matchNullable(predicate)
+        return arg
+    }
+
     fun <ARGUMENT> bodyMatch(predicate: (String) -> Boolean): ARGUMENT {
         val castedPredicate = { arg: Any? -> predicate(arg as String) }
         tempArgList += MethodStub.ArgumentMatcher(MethodStub.MatchType.BODY_MATCH, castedPredicate)
@@ -106,6 +140,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
     fun <ARGUMENT> bodyJson(body: String): ARGUMENT =
             bodyMatch { Utils.trimToSingleSpaces(body) == Utils.trimToSingleSpaces(it) }
+
 }
 
 class MethodStubDefinitionRequestContext<RESULT>(private val methodStubs: List<MethodStub>) {
@@ -158,7 +193,7 @@ class MethodStubDefinitionResponseContext<RESPONSE>(private val methodStubs: Lis
 
     fun code(code: Int): Unit = methodStubs.forEach { it.code = code }
 
-    fun body(body: RESPONSE) = bodyProvider{ body }
+    fun body(body: RESPONSE) = bodyProvider { body }
 
     fun bodyJson(bodyProvider: BodyProvider, body: String) = methodStubs.forEach { it.bodyJson = body; it.bodyJsonProvider = bodyProvider }
 
