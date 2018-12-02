@@ -61,10 +61,16 @@ class StubServer {
     fun start() {
         val tomcat = Tomcat()
         tomcat.setPort(port)
+        getResourceInterfacesToContextMapping().forEach { contextPath, interfaces ->
+            addContext(tomcat, interfaces, contextPath)
+        }
+        tomcat.start()
+        tomcat.server.await()
+    }
 
-        val context:Context = tomcat.addWebapp("/", File(".").absolutePath)
-
-        val resourceLoader = ResourceLoaderOfProxyInstances(getInterfacesToStub(), instantiateDependencies())
+    private fun addContext(tomcat: Tomcat, interfacesToStub: List<Class<*>>, contextPath:String) {
+        val context: Context = tomcat.addWebapp(contextPath, File(".").absolutePath)
+        val resourceLoader = ResourceLoaderOfProxyInstances(interfacesToStub, instantiateDependencies())
         resourceLoader.register(JerseyInternalsFilter::class.java)
         resourceLoader.register(NotFoundExceptionMapper::class.java)
         resourceLoader.register(StubNotFoundExceptionMapper::class.java)
@@ -72,13 +78,10 @@ class StubServer {
         addJerseyServlet(resourceLoader, context)
         addRequestContextFilter(context)
         context.addServletMapping("/*", "jersey-container-servlet")
-
-        tomcat.start()
-        tomcat.server.await()
     }
 
-    private fun getInterfacesToStub(): List<Class<*>> {
-        return AutoDiscoveryOfResourceInterfaces(reflections).getResourceInterfaces()
+    private fun getResourceInterfacesToContextMapping(): Map<String, List<Class<*>>> {
+        return AutoDiscoveryOfResourceInterfaces(reflections).getResourceInterfacesToContextMapping()
     }
 
     private fun addJerseyServlet(resourceLoader: ResourceLoaderOfProxyInstances, context: Context) {

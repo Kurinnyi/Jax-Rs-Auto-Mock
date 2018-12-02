@@ -1,10 +1,35 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.reflections.Reflections
+import java.io.InputStream
 import javax.ws.rs.Path
 
 class AutoDiscoveryOfResourceInterfaces(private val reflections: Reflections) {
-    fun getResourceInterfaces(): List<Class<*>> {
+
+    private val configFileName = "/config/contextPathsConfig.yaml"
+    private val defaultContextPath = "/"
+
+    fun getResourceInterfacesToContextMapping(): Map<String, List<Class<*>>> {
+        val contextPathsConfig: Map<String, String> = loadContextPathsConfig()
+        return getInterfacesToStub().groupBy { i ->
+            contextPathsConfig.entries.find { (key, _) ->
+                i.name.startsWith(key)
+            }?.value ?: defaultContextPath
+        }
+    }
+
+    private fun getInterfacesToStub(): List<Class<*>> {
         return reflections.getTypesAnnotatedWith(Path::class.java).filter { it.isInterface }
+    }
+
+    private fun loadContextPathsConfig():Map<String,String>{
+        val yamlObjectMapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())
+        val contextPathsConfig: InputStream? = this::class.java.getResourceAsStream(configFileName)
+        return contextPathsConfig?.let {
+            yamlObjectMapper.readValue(it, Map::class.java) as Map<String, String>
+        }?: emptyMap()
     }
 }
