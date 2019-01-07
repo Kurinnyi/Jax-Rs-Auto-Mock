@@ -1,12 +1,14 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
 import org.reflections.Reflections
+import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl
 
 class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
 
     fun getStubDefinitions(): List<StubsDefinition> {
         return reflections.getSubTypesOf(StubsDefinition::class.java)
                 .asSequence()
+                .filterNot (::isInternalInstance)
                 .map {
                     try {
                         it.getConstructor()
@@ -19,4 +21,7 @@ class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
                 .map { it.newInstance() }
                 .toList()
     }
+
+    private fun isInternalInstance(it: Class<out StubsDefinition>) =
+            it.name == GroupResourceImpl::class.java.name
 }

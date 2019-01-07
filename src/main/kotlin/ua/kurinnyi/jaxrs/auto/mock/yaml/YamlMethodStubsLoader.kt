@@ -3,8 +3,9 @@ package ua.kurinnyi.jaxrs.auto.mock.yaml
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import ua.kurinnyi.jaxrs.auto.mock.model.StubsGroup
 import ua.kurinnyi.jaxrs.auto.mock.MethodStubsLoader
-import ua.kurinnyi.jaxrs.auto.mock.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
 import java.io.IOException
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -16,6 +17,8 @@ import java.util.concurrent.TimeUnit
 
 
 class YamlMethodStubsLoader : MethodStubsLoader {
+    override fun getGroups(): List<StubsGroup> = emptyList()
+    
     private var responses: List<ResourceMethodStub>
 
     val yamlObjectMapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())

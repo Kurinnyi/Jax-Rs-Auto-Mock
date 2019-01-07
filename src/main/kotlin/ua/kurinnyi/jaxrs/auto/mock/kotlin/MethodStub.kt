@@ -1,6 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
-import ua.kurinnyi.jaxrs.auto.mock.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
@@ -17,11 +17,12 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     internal var bodyJsonProvider: BodyProvider? = null
     internal var proxyPath: String? = null
     internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
+    internal var isActivatedByGroups: Boolean = true
 
     override fun getStubbedClassName(): String = clazz.name
 
     override fun isMatchingMethod(method: Method, args: Array<Any?>?, request: HttpServletRequest): Boolean {
-        return method == this.method && paramMatch(args, request) && headersMatch(request)
+        return method == this.method && paramMatch(args, request) && headersMatch(request) && isActivatedByGroups
     }
 
     override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {

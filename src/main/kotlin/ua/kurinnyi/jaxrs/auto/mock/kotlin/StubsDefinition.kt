@@ -1,5 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
+import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
@@ -11,11 +12,13 @@ import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
 
 interface StubsDefinition {
-    fun getStubs(context: StubDefinitionContext): List<MethodStub>
+    fun getStubs(context: StubDefinitionContext): Pair<List<MethodStub>, List<Group>>
 }
 
 class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
     internal val stubs: MutableList<MethodStub> = mutableListOf()
+    internal val allGroups: MutableList<Group> = mutableListOf()
+    internal var activeGroups: List<Group> = listOf()
     internal var proxyBypassPath: String? = null
     internal var shouldBypassWhenNothingMatched: Boolean = false
 
@@ -30,9 +33,9 @@ class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
     }
 
 
-    fun createStubs(definitions: StubDefinitionContext.() -> Unit): List<MethodStub> {
+    fun createStubs(definitions: StubDefinitionContext.() -> Unit): Pair<List<MethodStub>, List<Group>> {
         definitions(this)
-        return stubs.toList()
+        return Pair(stubs.toList(), allGroups.toList())
     }
 
     fun <RESOURCE : Any> forClass(clazz: KClass<RESOURCE>, definitions: ClazzStubDefinitionContext<RESOURCE>.() -> Unit) {
@@ -40,6 +43,16 @@ class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
             proxyConfiguration.addClass(clazz.java.name, proxyBypassPath)
         }
         definitions(ClazzStubDefinitionContext(clazz.java, this))
+    }
+
+    fun group(name: String, activeByDefault:Boolean = true, body:() -> Unit){
+        val status = if (activeByDefault) GroupStatus.ACTIVE else GroupStatus.NON_ACTIVE
+        val group = Group(name, emptyList(), status)
+        if (activeGroups.contains(group)) throw IllegalArgumentException("Group $name contains itself recursively. This is forbidden.")
+        activeGroups += group
+        body()
+        allGroups.add(activeGroups.last())
+        activeGroups -= activeGroups.last()
     }
 }
 
@@ -64,7 +77,12 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
             null
         } as RESOURCE
         methodCall(instance)
+
+        val activeByGroup = context.activeGroups.lastOrNull()?.let { it.status == GroupStatus.ACTIVE } ?: true
+        context.activeGroups = context.activeGroups
+                .map { group -> group.copy(methodStubs = group.methodStubs + methodStubs) }
         context.stubs.addAll(methodStubs)
+        methodStubs.forEach{ it.isActivatedByGroups = activeByGroup }
         return MethodStubDefinitionRequestContext(methodStubs)
     }
 

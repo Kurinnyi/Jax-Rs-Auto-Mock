@@ -7,6 +7,7 @@ import org.apache.tomcat.util.descriptor.web.FilterMap
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import org.reflections.Reflections
+import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.AutoDiscoveryOfStubDefinitions
@@ -61,16 +62,17 @@ class StubServer {
     fun start() {
         val tomcat = Tomcat()
         tomcat.setPort(port)
+        val methodInvocationHandler = instantiateCommonDependencies()
         getResourceInterfacesToContextMapping().forEach { contextPath, interfaces ->
-            addContext(tomcat, interfaces, contextPath)
+            addContext(tomcat, interfaces, contextPath, methodInvocationHandler)
         }
         tomcat.start()
         tomcat.server.await()
     }
 
-    private fun addContext(tomcat: Tomcat, interfacesToStub: List<Class<*>>, contextPath:String) {
+    private fun addContext(tomcat: Tomcat, interfacesToStub: List<Class<*>>, contextPath:String, methodHandler: MethodInvocationHandler) {
         val context: Context = tomcat.addWebapp(contextPath, File(".").absolutePath)
-        val resourceLoader = ResourceLoaderOfProxyInstances(interfacesToStub, instantiateDependencies())
+        val resourceLoader = ResourceLoaderOfProxyInstances(interfacesToStub, methodHandler)
         resourceLoader.register(JerseyInternalsFilter::class.java)
         resourceLoader.register(NotFoundExceptionMapper::class.java)
         resourceLoader.register(StubNotFoundExceptionMapper::class.java)
@@ -95,12 +97,14 @@ class StubServer {
         resourceLoader.registerClasses(classesToRegister)
     }
 
-    private fun instantiateDependencies(): MethodInvocationHandler {
-        val stubDefinitions: List<StubsDefinition> = getStubDefinitions()
+    private fun instantiateCommonDependencies(): MethodInvocationHandler {
+        val groupEndpoint = GroupResourceImpl()
+        val stubDefinitions: List<StubsDefinition> = listOf(groupEndpoint) + getStubDefinitions()
         ResponseFromStubCreator.useJerseyDeserialization = useJerseyDeserialization
         val methodStubsLoader = CompositeMethodStubLoader(
                 KotlinMethodStubsLoader(stubDefinitions, proxyConfiguration),
                 YamlMethodStubsLoader())
+        groupEndpoint.loader = methodStubsLoader
         return MethodInvocationHandler(methodStubsLoader, proxyConfiguration)
     }
 
