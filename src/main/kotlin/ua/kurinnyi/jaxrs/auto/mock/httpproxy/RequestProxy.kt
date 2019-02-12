@@ -31,7 +31,7 @@ object RequestProxy {
 
     private fun addRequestHeaders(request: HttpServletRequest, httpPost: HttpRequestBase) {
         request.headerNames.iterator().forEach { headerName ->
-            if (headerName.toLowerCase()  != "content-length") {
+            if (!setOf("content-length", "transfer-encoding").contains(headerName.toLowerCase())) {
                 val values = request.getHeaders(headerName)
                 values.iterator().forEach { headerValue ->
                     httpPost.setHeader(BasicHeader(headerName, headerValue))

@@ -74,7 +74,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
             checkAllArgumentsSetUp(args, method)
             methodStubs += MethodStub(clazz, method, tempArgList)
             tempArgList = listOf()
-            null
+            getReturnValue(method)
         } as RESOURCE
         methodCall(instance)
 
@@ -84,6 +84,17 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
         context.stubs.addAll(methodStubs)
         methodStubs.forEach{ it.isActivatedByGroups = activeByGroup }
         return MethodStubDefinitionRequestContext(methodStubs)
+    }
+
+    private fun getReturnValue(method: Method): Any? {
+        return when (method.returnType) {
+            Int::class.java -> 0
+            Long::class.java -> 0L
+            Double::class.java -> 0.0
+            Float::class.java -> false
+            Boolean::class.java -> false
+            else -> null
+        }
     }
 
     private fun checkAllArgumentsSetUp(args: Array<Any>?, method: Method) {
