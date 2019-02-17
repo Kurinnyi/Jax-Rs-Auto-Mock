@@ -1,5 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
+import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
@@ -15,6 +16,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     internal var bodyProvider: ((Array<Any?>) -> Any?)? = null
     internal var bodyJson: String? = null
     internal var bodyJsonProvider: BodyProvider? = null
+    internal var bodyRaw: String? = null
     internal var proxyPath: String? = null
     internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
     internal var isActivatedByGroups: Boolean = true
@@ -27,8 +29,9 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
 
     override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
         responseHeaders.forEach { (name, value) -> response.addHeader(name, value) }
-        code?.let {
-            response.status = it
+        if (code != null || bodyRaw != null){
+            code?.let { response.status = it }
+            bodyRaw?.let { IOUtils.write(it, response.writer) }
             response.flushBuffer()
         }
         return when {

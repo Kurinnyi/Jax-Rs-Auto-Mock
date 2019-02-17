@@ -16,7 +16,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.71"
 }
 
-version = '0.1.11'
+version = '0.1.12'
 group = "ua.kurinnyi.jaxrs.auto.mock"
 sourceCompatibility = 1.8
 
