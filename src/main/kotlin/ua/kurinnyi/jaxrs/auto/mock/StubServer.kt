@@ -16,6 +16,7 @@ import ua.kurinnyi.jaxrs.auto.mock.kotlin.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
 import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlMethodStubsLoader
 import java.io.File
+import kotlin.reflect.KClass
 
 
 class StubServer {
@@ -30,6 +31,8 @@ class StubServer {
     private var autoDiscoveryOfStubDefinitions  = true
 
     private var proxyConfiguration:ProxyConfiguration  = NothingMatchedProxyConfiguration()
+
+    private var ignoredResources: Set<KClass<*>> = emptySet()
 
     fun setPort(port: Int): StubServer = this.apply{
         this.port = port
@@ -59,11 +62,15 @@ class StubServer {
         this.proxyConfiguration = proxyConfiguration
     }
 
+    fun ignoreResources(ignoredResources:Set<KClass<*>>):StubServer = this.apply {
+        this.ignoredResources = ignoredResources
+    }
+
     fun start() {
         val tomcat = Tomcat()
         tomcat.setPort(port)
         val methodInvocationHandler = instantiateCommonDependencies()
-        getResourceInterfacesToContextMapping().forEach { contextPath, interfaces ->
+        getResourceInterfacesToContextMapping(ignoredResources).forEach { contextPath, interfaces ->
             addContext(tomcat, interfaces, contextPath, methodInvocationHandler)
         }
         tomcat.start()
@@ -82,8 +89,8 @@ class StubServer {
         context.addServletMapping("/*", "jersey-container-servlet")
     }
 
-    private fun getResourceInterfacesToContextMapping(): Map<String, List<Class<*>>> {
-        return AutoDiscoveryOfResourceInterfaces(reflections).getResourceInterfacesToContextMapping()
+    private fun getResourceInterfacesToContextMapping(ignoredResources:Set<KClass<*>>): Map<String, List<Class<*>>> {
+        return AutoDiscoveryOfResourceInterfaces(reflections, ignoredResources).getResourceInterfacesToContextMapping()
     }
 
     private fun addJerseyServlet(resourceLoader: ResourceLoaderOfProxyInstances, context: Context) {

@@ -224,11 +224,24 @@ class MethodStubDefinitionResponseContext<RESPONSE>(private val methodStubs: Lis
 
     fun body(body: RESPONSE) = bodyProvider { body }
 
-    fun bodyJson(bodyProvider: BodyProvider, body: String) = methodStubs.forEach { it.bodyJson = body; it.bodyJsonProvider = bodyProvider }
+    fun bodyJson(bodyProvider: BodyProvider, body: String, postProcessor:((RESPONSE, Array<Any?>) -> RESPONSE)? = null)
+            = methodStubs.forEach {
+        it.bodyJson = body
+        it.bodyJsonProvider = bodyProvider
+        it.bodyPostProcessor = postProcessor as ((Any, Array<Any?>) -> Any?)?
+    }
+
+    fun bodyJsonTemplate(bodyProvider: BodyProvider, body: String, templateArgsProvider:(Array<Any?>) -> Any, postProcessor:((RESPONSE, Array<Any?>) -> RESPONSE)? = null)
+            = methodStubs.forEach {
+        it.bodyJson = body
+        it.bodyJsonProvider = bodyProvider
+        it.bodyTemplateArgsProvider = templateArgsProvider
+        it.bodyPostProcessor = postProcessor as ((Any, Array<Any?>) -> Any?)?
+    }
 
     fun bodyProvider(bodyProvider: (Array<Any?>) -> RESPONSE?) = methodStubs.forEach { it.bodyProvider = bodyProvider }
 
-    fun bodyRaw(body:String)  = methodStubs.forEach { it.bodyRaw = body }
+    fun bodyRaw(body:String) = methodStubs.forEach { it.bodyRaw = body }
 
     fun proxyTo(path: String) = methodStubs.forEach { it.proxyPath = path }
 

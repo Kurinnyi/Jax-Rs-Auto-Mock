@@ -6,8 +6,9 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.reflections.Reflections
 import java.io.InputStream
 import javax.ws.rs.Path
+import kotlin.reflect.KClass
 
-class AutoDiscoveryOfResourceInterfaces(private val reflections: Reflections) {
+class AutoDiscoveryOfResourceInterfaces(private val reflections: Reflections, private val ignoredResources: Set<KClass<*>>) {
 
     private val configFileName = "/config/contextPathsConfig.yaml"
     private val defaultContextPath = "/"
@@ -22,7 +23,10 @@ class AutoDiscoveryOfResourceInterfaces(private val reflections: Reflections) {
     }
 
     private fun getInterfacesToStub(): List<Class<*>> {
-        return reflections.getTypesAnnotatedWith(Path::class.java).filter { it.isInterface }
+        val ignoredResourcesJava = ignoredResources.map { it.java }
+        return reflections.getTypesAnnotatedWith(Path::class.java)
+                .filter { it.isInterface }
+                .filter { !ignoredResourcesJava.contains(it)  }
     }
 
     private fun loadContextPathsConfig():Map<String,String>{

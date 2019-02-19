@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.TemplateEngine
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
@@ -16,6 +17,8 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     internal var bodyProvider: ((Array<Any?>) -> Any?)? = null
     internal var bodyJson: String? = null
     internal var bodyJsonProvider: BodyProvider? = null
+    internal var bodyTemplateArgsProvider: ((Array<Any?>) -> Any)? = null
+    internal var bodyPostProcessor: ((Any, Array<Any?>) -> Any?)? = null
     internal var bodyRaw: String? = null
     internal var proxyPath: String? = null
     internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
@@ -36,7 +39,19 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
         }
         return when {
             bodyProvider != null -> bodyProvider!!(args ?: emptyArray())
-            bodyJsonProvider != null -> bodyJsonProvider!!.provideBodyObject(method.returnType, method.genericReturnType, bodyJson!!)
+            bodyJsonProvider != null -> {
+                var bodyRealJson:String = bodyJsonProvider!!.provideBodyJson(bodyJson!!)
+                if (bodyTemplateArgsProvider != null) {
+                    val bodyArgs = bodyTemplateArgsProvider!!(args ?: emptyArray())
+                    bodyRealJson = TemplateEngine.processTemplate(this.hashCode().toString(), bodyRealJson, bodyArgs)
+                }
+                val bodyObject = bodyJsonProvider!!.provideBodyObjectFromJson(method.returnType, method.genericReturnType, bodyRealJson)
+                if (bodyPostProcessor != null){
+                    bodyPostProcessor?.invoke(bodyObject, args?: emptyArray())
+                } else {
+                    bodyObject
+                }
+            }
             proxyPath != null -> {
                 RequestProxy.forwardRequest(proxyPath!!)
                 null

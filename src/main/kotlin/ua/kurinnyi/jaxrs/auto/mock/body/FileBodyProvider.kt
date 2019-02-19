@@ -5,6 +5,12 @@ import ua.kurinnyi.jaxrs.auto.mock.StubNotFoundException
 import java.lang.reflect.Type
 
 class FileBodyProvider(private val bodyProvider: BodyProvider) : BodyProvider {
+
+    override fun <T> provideBodyObjectFromJson(type: Class<T>, genericType: Type, bodyJson: String) =
+            bodyProvider.provideBodyObject(type, genericType, bodyJson)
+
+    override fun provideBodyJson(body: String): String  = readFile(body)
+
     override fun <T> provideBodyObject(type: Class<T>, genericType: Type, body: String): T {
         return bodyProvider.provideBodyObject(type, genericType, readFile(body))
     }

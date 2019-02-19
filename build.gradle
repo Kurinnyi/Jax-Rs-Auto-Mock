@@ -16,7 +16,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.71"
 }
 
-version = '0.1.12'
+version = '0.1.13'
 group = "ua.kurinnyi.jaxrs.auto.mock"
 sourceCompatibility = 1.8
 
@@ -39,6 +39,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect"
     compile 'org.reflections:reflections:0.9.11'
     compile "org.apache.httpcomponents:httpclient:4.5.6"
+    compile "io.pebbletemplates:pebble:3.0.8"
     compile "ua.kurinnyi.kotlin:pattern-matching:0.1"
 }
 
