@@ -1,12 +1,12 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
-import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
@@ -68,7 +68,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
         context.proxyConfiguration.addClass(clazz.name, null)
     }
 
-    fun <RESULT> whenRequest(methodCall: RESOURCE.() -> RESULT): MethodStubDefinitionRequestContext<RESULT> {
+    fun <RESULT> case(methodCall: RESOURCE.() -> RESULT): MethodStubDefinitionRequestContext<RESULT> {
         methodStubs = listOf()
         val instance = Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { proxy, method, args ->
             checkAllArgumentsSetUp(args, method)
@@ -84,17 +84,6 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
         context.stubs.addAll(methodStubs)
         methodStubs.forEach{ it.isActivatedByGroups = activeByGroup }
         return MethodStubDefinitionRequestContext(methodStubs)
-    }
-
-    private fun getReturnValue(method: Method): Any? {
-        return when (method.returnType) {
-            Int::class.java -> 0
-            Long::class.java -> 0L
-            Double::class.java -> 0.0
-            Float::class.java -> false
-            Boolean::class.java -> false
-            else -> null
-        }
     }
 
     private fun checkAllArgumentsSetUp(args: Array<Any>?, method: Method) {
@@ -180,8 +169,24 @@ class MethodStubDefinitionRequestContext<RESULT>(private val methodStubs: List<M
         return this
     }
 
-    infix fun thenResponse(responseDefinition: MethodStubDefinitionResponseContext<RESULT>.() -> Unit) {
-        responseDefinition(MethodStubDefinitionResponseContext(methodStubs))
+    infix fun then(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(Array<Any?>) -> RESULT?) {
+        methodStubs.forEach{ it.responseSection = responseDefinition as MethodStubDefinitionResponseContext<*>.(Array<Any?>) -> RESULT?}
+    }
+
+    infix fun <A1> then1(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1) -> RESULT?) {
+        methodStubs.forEach{ it.responseSection1 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?) -> RESULT?}
+    }
+    infix fun <A1, A2> then2(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2) -> RESULT?) {
+        methodStubs.forEach{ it.responseSection2 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?) -> RESULT?}
+    }
+    infix fun <A1, A2, A3> then3(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2, A3) -> RESULT?) {
+        methodStubs.forEach{ it.responseSection3 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?, Any?) -> RESULT?}
+    }
+    infix fun <A1, A2, A3, A4> then4(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2, A3, A4) -> RESULT?) {
+        methodStubs.forEach{ it.responseSection4 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?, Any?, Any?) -> RESULT?}
+    }
+    infix fun <A1, A2, A3, A4, A5> then5(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2, A3, A4, A5) -> RESULT?) {
+        methodStubs.forEach{ it.responseSection5 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?, Any?, Any?, Any?) -> RESULT?}
     }
 
 }
@@ -218,36 +223,46 @@ class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<Met
     fun matchRegex(regex: String): HeaderValue = matchNullable { it != null && regex.toRegex().matches(it) }
 }
 
-class MethodStubDefinitionResponseContext<RESPONSE>(private val methodStubs: List<MethodStub>) {
+class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter:ApiAdapter) {
 
-    fun code(code: Int): Unit = methodStubs.forEach { it.code = code }
-
-    fun body(body: RESPONSE) = bodyProvider { body }
-
-    fun bodyJson(bodyProvider: BodyProvider, body: String, postProcessor:((RESPONSE, Array<Any?>) -> RESPONSE)? = null)
-            = methodStubs.forEach {
-        it.bodyJson = body
-        it.bodyJsonProvider = bodyProvider
-        it.bodyPostProcessor = postProcessor as ((Any, Array<Any?>) -> Any?)?
+    fun code(code: Int): RESPONSE? {
+        apiAdapter.code(code)
+        return getReturnValue(apiAdapter.method)
     }
 
-    fun bodyJsonTemplate(bodyProvider: BodyProvider, body: String, templateArgsProvider:(Array<Any?>) -> Any, postProcessor:((RESPONSE, Array<Any?>) -> RESPONSE)? = null)
-            = methodStubs.forEach {
-        it.bodyJson = body
-        it.bodyJsonProvider = bodyProvider
-        it.bodyTemplateArgsProvider = templateArgsProvider
-        it.bodyPostProcessor = postProcessor as ((Any, Array<Any?>) -> Any?)?
+    fun bodyRaw(body:String): RESPONSE? {
+        apiAdapter.bodyRaw(body)
+        return getReturnValue(apiAdapter.method)
     }
 
-    fun bodyProvider(bodyProvider: (Array<Any?>) -> RESPONSE?) = methodStubs.forEach { it.bodyProvider = bodyProvider }
-
-    fun bodyRaw(body:String) = methodStubs.forEach { it.bodyRaw = body }
-
-    fun proxyTo(path: String) = methodStubs.forEach { it.proxyPath = path }
-
-    fun header(headerName: String, headerValue: String) = methodStubs.forEach {
-        it.responseHeaders[headerName] = headerValue
+    fun proxyTo(path: String): RESPONSE? {
+        apiAdapter.proxyTo(path)
+        return getReturnValue(apiAdapter.method)
     }
+
+    fun header(headerName: String, headerValue: String): RESPONSE? {
+        apiAdapter.header(headerName, headerValue)
+        return getReturnValue(apiAdapter.method)
+    }
+
+    fun bodyJson(bodyProvider: BodyProvider, body: String): RESPONSE =
+            apiAdapter.getObjectFromJson(bodyProvider, body)
+
+    fun bodyJsonTemplate(bodyProvider: BodyProvider, templateArgs: Map<String, Any>, body: String): RESPONSE =
+            apiAdapter.getObjectFromJsonTemplate(bodyProvider, body, templateArgs)
+
+}
+
+private fun <T>getReturnValue(method: Method): T? {
+    val result =  when (method.returnType) {
+        Int::class.java -> 0
+        Long::class.java -> 0L
+        Double::class.java -> 0.0
+        Float::class.java -> false
+        Boolean::class.java -> false
+        else -> null
+    }
+    return result as T?
 }
 typealias BY_JACKSON = JacksonBodyProvider
 typealias BY_JERSEY = JerseyInternalBodyProvider

@@ -1,11 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
-import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
-import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.TemplateEngine
-import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
+import java.lang.IllegalStateException
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -13,16 +10,14 @@ import javax.servlet.http.HttpServletResponse
 class MethodStub(private val clazz: Class<*>, private val method: Method, val arguments: List<ArgumentMatcher>) : ResourceMethodStub {
 
     internal val requestHeaders: MutableList<HeaderParameter> = mutableListOf()
-    internal var code: Int? = null
-    internal var bodyProvider: ((Array<Any?>) -> Any?)? = null
-    internal var bodyJson: String? = null
-    internal var bodyJsonProvider: BodyProvider? = null
-    internal var bodyTemplateArgsProvider: ((Array<Any?>) -> Any)? = null
-    internal var bodyPostProcessor: ((Any, Array<Any?>) -> Any?)? = null
-    internal var bodyRaw: String? = null
-    internal var proxyPath: String? = null
-    internal val responseHeaders: MutableMap<String, String> = mutableMapOf()
+    internal var responseSection:  (MethodStubDefinitionResponseContext<*>.(Array<Any?>) -> Any?)? = null
+    internal var responseSection1: (MethodStubDefinitionResponseContext<*>.(Any?) -> Any?)? = null
+    internal var responseSection2: (MethodStubDefinitionResponseContext<*>.(Any?,Any?) -> Any?)? = null
+    internal var responseSection3: (MethodStubDefinitionResponseContext<*>.(Any?,Any?,Any?) -> Any?)? = null
+    internal var responseSection4: (MethodStubDefinitionResponseContext<*>.(Any?,Any?,Any?,Any?) -> Any?)? = null
+    internal var responseSection5: (MethodStubDefinitionResponseContext<*>.(Any?,Any?,Any?,Any?,Any?) -> Any?)? = null
     internal var isActivatedByGroups: Boolean = true
+
 
     override fun getStubbedClassName(): String = clazz.name
 
@@ -31,33 +26,22 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     }
 
     override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
-        responseHeaders.forEach { (name, value) -> response.addHeader(name, value) }
-        if (code != null || bodyRaw != null){
-            code?.let { response.status = it }
-            bodyRaw?.let { IOUtils.write(it, response.writer) }
+        val apiAdapter = ApiAdapter(method, response)
+        val responseContext = MethodStubDefinitionResponseContext<Any?>(apiAdapter)
+        val a = args?: emptyArray()
+        val responseObject =  when {
+            responseSection != null -> responseSection!!(responseContext, a)
+            responseSection1 != null -> responseSection1!!(responseContext, a[0])
+            responseSection1 != null -> responseSection2!!(responseContext, a[0], a[1])
+            responseSection2 != null -> responseSection3!!(responseContext, a[0], a[1], a[2])
+            responseSection3 != null -> responseSection4!!(responseContext, a[0], a[1], a[2], a[3])
+            responseSection4 != null -> responseSection5!!(responseContext, a[0], a[1], a[2], a[3], a[4])
+            else -> throw IllegalStateException("Looks imposible")
+        }
+        if (apiAdapter.shouldFlush) {
             response.flushBuffer()
         }
-        return when {
-            bodyProvider != null -> bodyProvider!!(args ?: emptyArray())
-            bodyJsonProvider != null -> {
-                var bodyRealJson:String = bodyJsonProvider!!.provideBodyJson(bodyJson!!)
-                if (bodyTemplateArgsProvider != null) {
-                    val bodyArgs = bodyTemplateArgsProvider!!(args ?: emptyArray())
-                    bodyRealJson = TemplateEngine.processTemplate(this.hashCode().toString(), bodyRealJson, bodyArgs)
-                }
-                val bodyObject = bodyJsonProvider!!.provideBodyObjectFromJson(method.returnType, method.genericReturnType, bodyRealJson)
-                if (bodyPostProcessor != null){
-                    bodyPostProcessor?.invoke(bodyObject, args?: emptyArray())
-                } else {
-                    bodyObject
-                }
-            }
-            proxyPath != null -> {
-                RequestProxy.forwardRequest(proxyPath!!)
-                null
-            }
-            else -> null
-        }
+        return responseObject
     }
 
     class ArgumentMatcher(internal val matchType: MatchType, internal val matcher: (Any?) -> Boolean)
