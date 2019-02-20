@@ -4,7 +4,8 @@ import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.StubNotFoundException
 import java.lang.reflect.Type
 
-class FileBodyProvider(private val bodyProvider: BodyProvider) : BodyProvider {
+class FileBodyProvider(private val bodyProvider: BodyProvider) : ExtractingBodyProvider {
+    override fun canExtract(jsonInfo: String): Boolean = jsonInfo.startsWith("/")
 
     override fun <T> provideBodyObjectFromJson(type: Class<T>, genericType: Type, bodyJson: String) =
             bodyProvider.provideBodyObject(type, genericType, bodyJson)

@@ -156,7 +156,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
     fun <ARGUMENT> bodyMatchRegex(regex: String): ARGUMENT =
             bodyMatch { regex.toRegex().matches(it) }
 
-    fun <ARGUMENT> bodyJson(body: String): ARGUMENT =
+    fun <ARGUMENT> bodySameJson(body: String): ARGUMENT =
             bodyMatch { Utils.trimToSingleSpaces(body) == Utils.trimToSingleSpaces(it) }
 
 }
@@ -245,11 +245,11 @@ class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter:ApiA
         return getReturnValue(apiAdapter.method)
     }
 
-    fun bodyJson(bodyProvider: BodyProvider, body: String): RESPONSE =
-            apiAdapter.getObjectFromJson(bodyProvider, body)
+    fun bodyJson(bodyProvider: BodyProvider, body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
+            apiAdapter.getObjectFromJson(bodyProvider, body, templateArgs.toMap())
 
-    fun bodyJsonTemplate(bodyProvider: BodyProvider, templateArgs: Map<String, Any>, body: String): RESPONSE =
-            apiAdapter.getObjectFromJsonTemplate(bodyProvider, body, templateArgs)
+    fun bodyJson(body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
+            apiAdapter.getObjectFromJson(body, templateArgs.toMap())
 
 }
 

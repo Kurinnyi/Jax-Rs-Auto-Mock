@@ -7,9 +7,14 @@ import org.apache.tomcat.util.descriptor.web.FilterMap
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import org.reflections.Reflections
+import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.ExtractingBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.kotlin.ApiAdapterFactory
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.AutoDiscoveryOfStubDefinitions
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.KotlinMethodStubsLoader
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.StubsDefinition
@@ -33,6 +38,9 @@ class StubServer {
     private var proxyConfiguration:ProxyConfiguration  = NothingMatchedProxyConfiguration()
 
     private var ignoredResources: Set<KClass<*>> = emptySet()
+
+    private var defaultBodyProvider: BodyProvider = JacksonBodyProvider
+    private var defaultExtractingBodyProvider:ExtractingBodyProvider? = null
 
     fun setPort(port: Int): StubServer = this.apply{
         this.port = port
@@ -64,6 +72,14 @@ class StubServer {
 
     fun ignoreResources(ignoredResources:Set<KClass<*>>):StubServer = this.apply {
         this.ignoredResources = ignoredResources
+    }
+
+    fun defaultBodyProvider(bodyProvider:BodyProvider):StubServer = this.apply {
+        this.defaultBodyProvider = bodyProvider
+    }
+
+    fun defaultExtractingBodyProvider(bodyProvider:ExtractingBodyProvider):StubServer = this.apply {
+        this.defaultExtractingBodyProvider = bodyProvider
     }
 
     fun start() {
@@ -112,6 +128,9 @@ class StubServer {
                 KotlinMethodStubsLoader(stubDefinitions, proxyConfiguration),
                 YamlMethodStubsLoader())
         groupEndpoint.loader = methodStubsLoader
+
+        ApiAdapterFactory.defaultBodyProvider = defaultBodyProvider
+        ApiAdapterFactory.defaultExtractingBodyProvider = defaultExtractingBodyProvider?: FileBodyProvider(defaultBodyProvider)
         return MethodInvocationHandler(methodStubsLoader, proxyConfiguration)
     }
 
