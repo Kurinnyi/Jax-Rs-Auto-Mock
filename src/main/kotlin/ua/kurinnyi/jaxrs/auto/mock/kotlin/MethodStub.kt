@@ -32,11 +32,11 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
         val responseObject =  when {
             responseSection != null -> responseSection!!(responseContext, a)
             responseSection1 != null -> responseSection1!!(responseContext, a[0])
-            responseSection1 != null -> responseSection2!!(responseContext, a[0], a[1])
-            responseSection2 != null -> responseSection3!!(responseContext, a[0], a[1], a[2])
-            responseSection3 != null -> responseSection4!!(responseContext, a[0], a[1], a[2], a[3])
-            responseSection4 != null -> responseSection5!!(responseContext, a[0], a[1], a[2], a[3], a[4])
-            else -> throw IllegalStateException("Looks imposible")
+            responseSection2 != null -> responseSection2!!(responseContext, a[0], a[1])
+            responseSection3 != null -> responseSection3!!(responseContext, a[0], a[1], a[2])
+            responseSection4 != null -> responseSection4!!(responseContext, a[0], a[1], a[2], a[3])
+            responseSection5 != null -> responseSection5!!(responseContext, a[0], a[1], a[2], a[3], a[4])
+            else -> throw IllegalStateException("Haven't you forgot to add 'then' section to mock for ${method.name}")
         }
         if (apiAdapter.shouldFlush) {
             response.flushBuffer()
