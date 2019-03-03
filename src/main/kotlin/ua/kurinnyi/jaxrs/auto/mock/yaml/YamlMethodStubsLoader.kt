@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import ua.kurinnyi.jaxrs.auto.mock.model.StubsGroup
 import ua.kurinnyi.jaxrs.auto.mock.MethodStubsLoader
+import ua.kurinnyi.jaxrs.auto.mock.kotlin.GroupCallback
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
 import java.io.IOException
 import java.nio.file.FileSystems
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit
 
 
 class YamlMethodStubsLoader : MethodStubsLoader {
+    override fun getGroupsCallbacks(): List<GroupCallback> = emptyList()
     override fun getGroups(): List<StubsGroup> = emptyList()
     
     private var responses: List<ResourceMethodStub>

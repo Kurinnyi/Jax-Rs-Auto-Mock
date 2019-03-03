@@ -19,10 +19,17 @@ class GroupResourceImpl : StubsDefinition {
             case { updateList(any()) } then1 { groups:List<GroupDto> ->
                 groups.forEach { group ->
                     val stubsGroup = loader.getGroups().find { it.name() == group.name }
+                    val groupCallbacks = loader.getGroupsCallbacks().filter { it.groupName == group.name }
                     stubsGroup ?: println("Group with name ${group.name} not found")
                     when (group.status) {
-                        GroupStatus.ACTIVE -> stubsGroup?.activate()
-                        GroupStatus.NON_ACTIVE -> stubsGroup?.deactivate()
+                        GroupStatus.ACTIVE -> {
+                            stubsGroup?.activate()
+                            groupCallbacks.forEach{it.onGroupEnabled()}
+                        }
+                        GroupStatus.NON_ACTIVE -> {
+                            stubsGroup?.deactivate()
+                            groupCallbacks.forEach{it.onGroupDisabled()}
+                        }
                         GroupStatus.PARTIALLY_ACTIVE ->
                             println("PARTIALLY_ACTIVE is not a status that can be set by endpoint")
                     }
