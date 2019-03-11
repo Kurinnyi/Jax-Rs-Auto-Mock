@@ -2,7 +2,7 @@
 This project provides a glue code and simple declarative DSL to quickly create and run mock server that matches your jax-rs interface contract. 
 <br>
 For more information, please refer to the example project https://github.com/Kurinnyi/Jax-Rs-Auto-Mock-Example<br>
-###Use cases of the project
+### Use cases of the project
 Common`JAX-RS` REST service contains so called `Resource` - classes or interfaces with annotations.
 ```java
 @Path("/helloworld")
@@ -29,7 +29,7 @@ It is useful in a number of situation. For example:
 * only part of responses are needed to be overridden and other should be proxied to original service
 * ...
 
-#####The simplest standalone mock server for the interface above consists only of two files:
+##### The simplest standalone mock server for the interface above consists only of two files:
 * Actual definition of mock. It uses kotlin DSL to define expected behaviour of the mock. And it is inspired by some popular mock frameworks for unit tests.
 ```kotlin
 import example.removeit.HelloRestResourceInterface
@@ -74,7 +74,7 @@ class MockExample : StubsDefinition {
 <br><br>
 That is enough to start the mock directly from your IDE or build executable jar or start it in any other way suitable for kotlin/jvm application.
 
-###API for defining mock cases
+### API for defining mock cases
 <B>StubsDefinition</B> interface is the one needed to be implemented.
 It is then auto-discovered on start of the server.
 It has two methods `getStubs` and `getGroupsCallbacks`, and both of them are optional for everride, but it is expected to override at least one. 
@@ -123,7 +123,7 @@ It is possible to have many calls to Resource method in one `case` or even diffe
         }
     }
 ```
-####Matcher methods
+#### Matcher methods
 When calling Resource method inside `case` there is a variety of methods to use as matchers:
  * `eq` - use java equals method to check if matches
  * `notEg` - same as above but with negation
@@ -149,7 +149,7 @@ When calling Resource method inside `case` there is a variety of methods to use 
         "Hello Ivan"
     }  
 ```
-####Providing the response
+#### Providing the response
 `then` method accepts the lambda which should provide the response and is called every time the corresponding case 
 clause matches. The lambda passed to method receives array of method arguments that was received by resource.
 <br>There are also similar methods `then1` to `then5` which receives same arguments but can be typed.
@@ -235,9 +235,9 @@ Can be useful when need to return some JSON which does not match the schema of r
         proxyTo("http:somerealservices.com/")
     }  
 ```
-####Groups
+### Groups
 todo
-####Proxy
+### Proxy
 todo
-###Server configuration
+### Server configuration
 todo
