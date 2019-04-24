@@ -18,6 +18,7 @@ import ua.kurinnyi.jaxrs.auto.mock.kotlin.ApiAdapterFactory
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.AutoDiscoveryOfStubDefinitions
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.KotlinMethodStubsLoader
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.StubsDefinition
+import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
 import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlMethodStubsLoader
 import java.io.File
@@ -41,6 +42,8 @@ class StubServer {
 
     private var defaultBodyProvider: BodyProvider = JacksonBodyProvider
     private var defaultExtractingBodyProvider:ExtractingBodyProvider? = null
+
+    private var enabledByDefaultGroups:List<String> = emptyList()
 
     fun setPort(port: Int): StubServer = this.apply{
         this.port = port
@@ -82,10 +85,15 @@ class StubServer {
         this.defaultExtractingBodyProvider = bodyProvider
     }
 
+    fun enableGroupsOnStart(vararg groupNames: String):StubServer = this.apply {
+        this.enabledByDefaultGroups = groupNames.toList()
+    }
+
     fun start() {
         val tomcat = Tomcat()
         tomcat.setPort(port)
         val methodInvocationHandler = instantiateCommonDependencies()
+        enabledByDefaultGroups.forEach{ GroupSwitchService.switchGroupStatus(it, GroupStatus.ACTIVE) }
         getResourceInterfacesToContextMapping(ignoredResources).forEach { contextPath, interfaces ->
             addContext(tomcat, interfaces, contextPath, methodInvocationHandler)
         }
@@ -127,7 +135,7 @@ class StubServer {
         val methodStubsLoader = CompositeMethodStubLoader(
                 KotlinMethodStubsLoader(stubDefinitions, proxyConfiguration),
                 YamlMethodStubsLoader())
-        groupEndpoint.loader = methodStubsLoader
+        GroupSwitchService.loader = methodStubsLoader
 
         ApiAdapterFactory.defaultBodyProvider = defaultBodyProvider
         ApiAdapterFactory.defaultExtractingBodyProvider = defaultExtractingBodyProvider?: FileBodyProvider(defaultBodyProvider)

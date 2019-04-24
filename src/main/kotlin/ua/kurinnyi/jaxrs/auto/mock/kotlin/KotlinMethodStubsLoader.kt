@@ -11,7 +11,8 @@ class KotlinMethodStubsLoader(stubDefinitions: List<StubsDefinition>,  proxyConf
     private val groupsCallbacks: List<GroupCallback>
 
     init {
-        val definitions = stubDefinitions.map { it.getStubs(StubDefinitionContext(proxyConfiguration)) }
+        val definitions = stubDefinitions.sortedByDescending(StubsDefinition::getPriority)
+                .map { it.getStubs(StubDefinitionContext(proxyConfiguration)) }
         stubs = definitions.flatMap { (stubs, _) -> stubs }
         groups = mergeGroups(definitions)
         groupsCallbacks = stubDefinitions.flatMap { it.getGroupsCallbacks(GroupsCallbacksContext()) }

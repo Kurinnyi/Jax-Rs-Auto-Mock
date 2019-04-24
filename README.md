@@ -1,5 +1,5 @@
 # Jax-Rs-Auto-Mock
-This project provides a glue code and simple declarative DSL to quickly create and run mock server that matches your jax-rs interface contract. 
+This project provides a glue code and simple declarative DSL to quickly create and run Service virtualisation / mock server that matches jax-rs interface contract. 
 <br>
 For more information, please refer to the example project https://github.com/Kurinnyi/Jax-Rs-Auto-Mock-Example<br>
 ### Use cases of the project
