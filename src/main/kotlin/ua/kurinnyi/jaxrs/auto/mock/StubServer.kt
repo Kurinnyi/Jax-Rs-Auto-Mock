@@ -14,10 +14,7 @@ import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.ApiAdapterFactory
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.AutoDiscoveryOfStubDefinitions
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.KotlinMethodStubsLoader
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.StubsDefinition
+import ua.kurinnyi.jaxrs.auto.mock.kotlin.*
 import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
 import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlMethodStubsLoader
@@ -137,8 +134,8 @@ class StubServer {
                 YamlMethodStubsLoader())
         GroupSwitchService.loader = methodStubsLoader
 
-        ApiAdapterFactory.defaultBodyProvider = defaultBodyProvider
-        ApiAdapterFactory.defaultExtractingBodyProvider = defaultExtractingBodyProvider?: FileBodyProvider(defaultBodyProvider)
+        JsonUtils.defaultJsonBodyProvider = defaultBodyProvider
+        JsonUtils.defaultExtractingJsonBodyProvider = defaultExtractingBodyProvider?: FileBodyProvider(defaultBodyProvider)
         return MethodInvocationHandler(methodStubsLoader, proxyConfiguration)
     }
 

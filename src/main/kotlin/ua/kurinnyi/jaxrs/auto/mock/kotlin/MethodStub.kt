@@ -26,7 +26,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     }
 
     override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
-        val apiAdapter = ApiAdapterFactory.getApiAdapter(method, response)
+        val apiAdapter = ApiAdapter(method, response)
         val responseContext = MethodStubDefinitionResponseContext<Any?>(apiAdapter)
         val a = args?: emptyArray()
         val responseObject =  when {
