@@ -19,6 +19,9 @@ import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.*
 import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
+import ua.kurinnyi.jaxrs.auto.mock.recorder.RecordSaver
+import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
+import ua.kurinnyi.jaxrs.auto.mock.recorder.ResponseDecoder
 import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
 import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlMethodStubsLoader
 import java.io.File
@@ -88,6 +91,14 @@ class StubServer {
 
     fun enableGroupsOnStart(vararg groupNames: String):StubServer = this.apply {
         this.enabledByDefaultGroups = groupNames.toList()
+    }
+
+    fun setRecordsSaver(saver:RecordSaver):StubServer = this.also {
+        Recorder.recordSaver = saver
+    }
+
+    fun addHttpResponseDecoder(encoding:String, decoder:ResponseDecoder):StubServer = this.also {
+        Recorder.responseDecoders[encoding] = decoder
     }
 
     fun start() {

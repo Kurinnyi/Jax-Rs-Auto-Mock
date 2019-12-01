@@ -23,7 +23,6 @@ class YamlMethodStubsLoader : MethodStubsLoader {
     
     private var responses: List<ResourceMethodStub>
 
-    val yamlObjectMapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())
     init {
         responses = getMethodStubResponses()
         Executors.newScheduledThreadPool(1)
@@ -62,7 +61,7 @@ class YamlMethodStubsLoader : MethodStubsLoader {
     private fun readYaml(path: Path): List<YamlMethodStub> {
         return try {
             Files.newBufferedReader(path).use {
-                yamlObjectMapper.readValue(it, MethodStubsHolder::class.java).stubs
+                YamlObjectMapper.read<MethodStubsHolder>(it).stubs
             }
         } catch (e: IOException) {
             System.err.println("Failed to load yaml: $path")
