@@ -7,6 +7,7 @@ import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
+import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
@@ -107,9 +108,20 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
     fun anyDouble(): Double = matchPrimitive({ true }, 0.0)
     fun anyLong(): Long = matchPrimitive({ true }, 0L)
 
+    fun anyBooleanInRecord(): Boolean = ignoreInRecordPrimitive(true)
+    fun anyIntInRecord(): Int = ignoreInRecordPrimitive(0)
+    fun anyDoubleInRecord(): Double = ignoreInRecordPrimitive(0.0)
+    fun anyLongInRecord(): Long = ignoreInRecordPrimitive(0L)
+
     fun <ARGUMENT> isNull(): ARGUMENT = matchNullable { it == null }
 
     fun <ARGUMENT> notNull(): ARGUMENT = matchNullable { it != null }
+
+    fun <ARGUMENT> anyInRecord(): ARGUMENT {
+        val castedPredicate = { arg: Any? -> true }
+        tempArgList += MethodStub.ArgumentMatcher(MethodStub.MatchType.IGNORE_IN_RECORD, castedPredicate)
+        return null as ARGUMENT
+    }
 
     fun <ARGUMENT> matchNullable(predicate: (ARGUMENT?) -> Boolean): ARGUMENT {
         val castedPredicate = { arg: Any? -> predicate(arg as ARGUMENT) }
@@ -141,6 +153,11 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
     private fun <ARGUMENT> matchPrimitive(predicate: (ARGUMENT?) -> Boolean, arg: ARGUMENT): ARGUMENT {
         matchNullable(predicate)
+        return arg
+    }
+
+    private fun <ARGUMENT> ignoreInRecordPrimitive(arg: ARGUMENT): ARGUMENT {
+        anyInRecord<ARGUMENT>()
         return arg
     }
 
@@ -220,7 +237,11 @@ class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<Met
     fun matchRegex(regex: String): HeaderValue = matchNullable { it != null && regex.toRegex().matches(it) }
 }
 
-class MethodStubDefinitionResponseContext<RESPONSE> (val apiAdapter:ApiAdapter) {
+class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter:ApiAdapter) {
+
+    fun record() {
+        Recorder.write(apiAdapter.method, apiAdapter.getParamsConfigForRecorder())
+    }
 
     fun code(code: Int): RESPONSE? {
         apiAdapter.code(code)

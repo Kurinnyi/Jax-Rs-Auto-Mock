@@ -2,6 +2,7 @@ package ua.kurinnyi.jaxrs.auto.mock.kotlin
 
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.Utils
+import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.IllegalStateException
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
@@ -26,9 +27,10 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     }
 
     override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
-        val apiAdapter = ApiAdapter(method, response)
+        val apiAdapter = ApiAdapter(method, response, args?: emptyArray(), arguments)
         val responseContext = MethodStubDefinitionResponseContext<Any?>(apiAdapter)
         val a = args?: emptyArray()
+
         val responseObject =  when {
             responseSection != null -> responseSection!!(responseContext, a)
             responseSection1 != null -> responseSection1!!(responseContext, a[0])
@@ -47,7 +49,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
     class ArgumentMatcher(internal val matchType: MatchType, internal val matcher: (Any?) -> Boolean)
 
     enum class MatchType {
-        MATCH, BODY_MATCH
+        MATCH, BODY_MATCH, IGNORE_IN_RECORD
     }
 
     data class HeaderParameter(val headerName: String, val headerValue: ArgumentMatcher)
@@ -64,7 +66,7 @@ class MethodStub(private val clazz: Class<*>, private val method: Method, val ar
         } else {
             arguments.zip(args).all { (matcher, arg) ->
                 when (matcher.matchType) {
-                    MatchType.MATCH -> matcher.matcher(arg)
+                    MatchType.MATCH, MatchType.IGNORE_IN_RECORD -> matcher.matcher(arg)
                     MatchType.BODY_MATCH -> matcher.matcher(Utils.bodyAsString(request))
                 }
             }

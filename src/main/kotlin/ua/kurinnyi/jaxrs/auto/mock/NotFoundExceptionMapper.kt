@@ -1,5 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
+import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.ext.ExceptionMapper
 import javax.ws.rs.ext.Provider

@@ -5,7 +5,7 @@ import org.apache.http.client.methods.*
 import org.apache.http.entity.InputStreamEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
-import ua.kurinnyi.jaxrs.auto.mock.ContextSaveFilter
+import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import java.io.InputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletRequest

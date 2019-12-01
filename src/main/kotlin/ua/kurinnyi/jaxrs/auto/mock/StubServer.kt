@@ -12,6 +12,9 @@ import ua.kurinnyi.jaxrs.auto.mock.body.ExtractingBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl
+import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingFilter
+import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
+import ua.kurinnyi.jaxrs.auto.mock.filters.ResponseIntersectingFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.*
@@ -19,6 +22,7 @@ import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
 import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlMethodStubsLoader
 import java.io.File
+import javax.servlet.Filter
 import kotlin.reflect.KClass
 
 
@@ -106,7 +110,9 @@ class StubServer {
         resourceLoader.register(StubNotFoundExceptionMapper::class.java)
         registerCustomProviders(resourceLoader)
         addJerseyServlet(resourceLoader, context)
-        addRequestContextFilter(context)
+        addFilter(context, BufferingFilter())
+        addFilter(context, ContextSaveFilter())
+        addFilter(context, ResponseIntersectingFilter())
         context.addServletMapping("/*", "jersey-container-servlet")
     }
 
@@ -146,10 +152,10 @@ class StubServer {
             return stubDefinitions
     }
 
-    private fun addRequestContextFilter(context: Context) {
+    private fun addFilter(context: Context, filterInstance:Filter) {
         val def = FilterDef().apply {
-            filterName = ContextSaveFilter::class.java.simpleName
-            filter = ContextSaveFilter()
+            filterName = filterInstance.javaClass.simpleName
+            filter = filterInstance
             context.addFilterDef(this)
         }
         FilterMap().apply {

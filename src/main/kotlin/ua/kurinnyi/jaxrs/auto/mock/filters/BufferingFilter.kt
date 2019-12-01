@@ -1,45 +1,24 @@
-package ua.kurinnyi.jaxrs.auto.mock
+package ua.kurinnyi.jaxrs.auto.mock.filters
 
 import org.apache.commons.io.IOUtils
-
+import java.io.*
 import javax.servlet.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletRequestWrapper
 import javax.servlet.http.HttpServletResponse
-import java.io.BufferedReader
-import java.io.ByteArrayInputStream
-import java.io.IOException
-import java.io.InputStreamReader
+import javax.servlet.http.HttpServletResponseWrapper
 
-class ContextSaveFilter : Filter {
-
-    companion object {
-        private val requestHolder = ThreadLocal<RequestWrapper>()
-        private val responseHolder = ThreadLocal<HttpServletResponse>()
-
-        val request: HttpServletRequest
-            get() = requestHolder.get()
-        val response: HttpServletResponse
-            get() = responseHolder.get()
-    }
-
-    override fun init(filterConfig: FilterConfig) {
-    }
-
-    override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
-        val requestWrapper = RequestWrapper(request as HttpServletRequest)
-        requestHolder.set(requestWrapper)
-        responseHolder.set(response as HttpServletResponse)
-        try {
-            chain.doFilter(requestWrapper, response)
-        } finally {
-            requestHolder.remove()
-            responseHolder.remove()
-        }
-    }
-
+class BufferingFilter : Filter {
     override fun destroy() {
     }
+
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain) {
+        chain.doFilter(RequestWrapper(request as HttpServletRequest), ResponseWrapper(response as HttpServletResponse))
+    }
+
+    override fun init(filterConfig: FilterConfig?) {
+    }
+
 
     class RequestWrapper(request: HttpServletRequest) : HttpServletRequestWrapper(request) {
         private val bytes: ByteArray = IOUtils.toByteArray(request.inputStream)
@@ -76,5 +55,31 @@ class ContextSaveFilter : Filter {
         }
     }
 
+    class ResponseWrapper(response: HttpServletResponse) : HttpServletResponseWrapper(response) {
 
+        private val stream = CopyingServletOutputStream(super.getOutputStream())
+
+        fun getResponseBytes():ByteArray  = stream.getResponseBytes()
+
+        override fun getOutputStream(): ServletOutputStream = stream
+
+        class CopyingServletOutputStream(val wrappedStream:ServletOutputStream) : ServletOutputStream() {
+
+            private val copy:ByteArrayOutputStream = ByteArrayOutputStream()
+
+            fun getResponseBytes() = copy.toByteArray()
+
+            override fun isReady(): Boolean = wrappedStream.isReady
+
+            override fun write(b: Int) {
+                wrappedStream.write(b)
+                copy.write(b)
+            }
+
+            override fun setWriteListener(listener: WriteListener?) {
+                wrappedStream.setWriteListener(listener)
+            }
+
+        }
+    }
 }

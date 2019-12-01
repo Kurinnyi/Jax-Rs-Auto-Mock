@@ -1,5 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
+import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
