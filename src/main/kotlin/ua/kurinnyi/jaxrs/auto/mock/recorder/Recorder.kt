@@ -1,5 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.recorder
 
+import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.Utils.bodyAsString
 import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingFilter
 import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
@@ -12,9 +13,20 @@ import java.util.concurrent.ConcurrentHashMap
 object Recorder {
 
     val responseDecoders = mutableMapOf<String, ResponseDecoder>()
-    var recordSaver:RecordSaver = ConsoleRecordSaver
+    var recordSaver: RecordSaver = ConsoleRecordSaver
 
     private val recordedCalls = ConcurrentHashMap<Method, Map<YamlMethodStub.Request, YamlMethodStub.Response>>()
+
+    fun writeExactMatch(method: Method, paramValues: Array<Any?>?) {
+        val methodParams = (paramValues ?: emptyArray()).zip(method.parameters)
+                .map { (argValue, methodParam) ->
+                    when {
+                        Utils.isHttpBody(methodParam) -> Recorder.MethodParam(Recorder.ParamProcessingWay.BODY, null)
+                        else -> Recorder.MethodParam(Recorder.ParamProcessingWay.PARAM, argValue.toString())
+                    }
+                }
+        write(method, methodParams)
+    }
 
     fun write(method: Method, methodParams: List<MethodParam>) {
         ResponseIntersectingFilter.addTask { _, response ->
@@ -43,7 +55,7 @@ object Recorder {
 
             val previousRecords = recordedCalls[method]
             if (previousRecords != mergeRecords(method, request, yamlResponse)) {
-                saveRecords(method, recordedCalls[method]?: emptyMap())
+                saveRecords(method, recordedCalls[method] ?: emptyMap())
             }
         }
     }
@@ -54,7 +66,7 @@ object Recorder {
     private fun mergeRecords(method: Method, request: YamlMethodStub.Request, response: YamlMethodStub.Response):
             Map<YamlMethodStub.Request, YamlMethodStub.Response>? {
         return recordedCalls.merge(method, mapOf(request to response)) { cases, _ ->
-            if (cases.containsKey(request) && cases[request] != response ) {
+            if (cases.containsKey(request) && cases[request] != response) {
                 println("Overriding recorded response for $request from ${cases[request]} to $response")
             }
             cases + (request to response)

@@ -17,19 +17,6 @@ class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
     internal val stubs: MutableList<MethodStub> = mutableListOf()
     internal val allGroups: MutableList<Group> = mutableListOf()
     internal var activeGroups: List<Group> = listOf()
-    internal var proxyBypassPath: String? = null
-    internal var shouldBypassWhenNothingMatched: Boolean = false
-
-
-    fun bypassAnyNotMatched(path: String) {
-        shouldBypassWhenNothingMatched = true
-        proxyBypassPath = path
-    }
-
-    fun bypassAnyNotMatched() {
-        shouldBypassWhenNothingMatched = true
-    }
-
 
     fun createStubs(definitions: StubDefinitionContext.() -> Unit): Pair<List<MethodStub>, List<Group>> {
         definitions(this)
@@ -37,9 +24,6 @@ class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
     }
 
     fun <RESOURCE : Any> forClass(clazz: KClass<RESOURCE>, definitions: ClazzStubDefinitionContext<RESOURCE>.() -> Unit) {
-        if (shouldBypassWhenNothingMatched) {
-            proxyConfiguration.addClass(clazz.java.name, proxyBypassPath)
-        }
         definitions(ClazzStubDefinitionContext(clazz.java, this))
     }
 
@@ -59,11 +43,11 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
     private var methodStubs: List<MethodStub> = listOf()
 
     fun bypassAnyNotMatched(path: String) {
-        context.proxyConfiguration.addClass(clazz.name, path)
+        context.proxyConfiguration.addClassForProxy(clazz.name, path)
     }
 
-    fun bypassAnyNotMatched() {
-        context.proxyConfiguration.addClass(clazz.name, null)
+    fun recordAnyBypassed() {
+        context.proxyConfiguration.addClassForRecord(clazz.name)
     }
 
     fun <RESULT> case(methodCall: RESOURCE.() -> RESULT): MethodStubDefinitionRequestContext<RESULT> {

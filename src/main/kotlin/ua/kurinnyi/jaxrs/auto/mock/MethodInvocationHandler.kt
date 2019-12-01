@@ -4,6 +4,7 @@ import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.util.*
@@ -29,6 +30,9 @@ class MethodInvocationHandler(private val methodStubsLoader: MethodStubsLoader, 
         val interfaceName = getInterfaceName(proxy)
         val matchingStub = stubs.firstOrNull { it.isMatchingMethod(method, args, ContextSaveFilter.request) }
         if (proxyConfiguration.shouldClassBeProxied(interfaceName, matchingStub != null)){
+            if (proxyConfiguration.shouldRecord(interfaceName)) {
+                Recorder.writeExactMatch(method, args)
+            }
             return ProxyingResourceMethodStub(proxyConfiguration.getProxyUrl(interfaceName))
         }
         verifyClassStubbed(stubs, interfaceName)

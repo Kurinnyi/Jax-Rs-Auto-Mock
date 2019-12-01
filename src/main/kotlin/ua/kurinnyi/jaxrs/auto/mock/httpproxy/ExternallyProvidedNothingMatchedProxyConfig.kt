@@ -1,8 +1,19 @@
 package ua.kurinnyi.jaxrs.auto.mock.httpproxy
 
-open class ExternallyProvidedNothingMatchedProxyConfig(val packageToUrlMapping:Map<String, String>): ProxyConfiguration {
+open class ExternallyProvidedNothingMatchedProxyConfig(
+        private val packageToUrlMapping: Map<String, String>,
+        private val packagesToRecord: Set<String>
+) : ProxyConfiguration {
 
     private val nothingMatchedProxyConfiguration = NothingMatchedProxyConfiguration()
+
+    override fun addClassForRecord(clazzName: String) {
+        nothingMatchedProxyConfiguration.addClassForRecord(clazzName)
+    }
+
+    override fun shouldRecord(clazzName: String): Boolean =
+            packagesToRecord.any { clazzName.startsWith(it) }
+                    || nothingMatchedProxyConfiguration.shouldRecord(clazzName)
 
     override fun shouldClassBeProxied(clazzName: String, stubDefinitionIsFound: Boolean): Boolean {
         return (!stubDefinitionIsFound && packageIsConfigured(clazzName))
@@ -10,15 +21,15 @@ open class ExternallyProvidedNothingMatchedProxyConfig(val packageToUrlMapping:M
     }
 
     override fun getProxyUrl(clazzName: String): String =
-            if (packageIsConfigured(clazzName)){
+            if (packageIsConfigured(clazzName)) {
                 getProxyUrlForClass(clazzName)
             } else {
                 nothingMatchedProxyConfiguration.getProxyUrl(clazzName)
             }
 
-    override fun addClass(clazzName: String, proxyUrl: String?) {
-        if (proxyUrl != null){
-            nothingMatchedProxyConfiguration.addClass(clazzName, proxyUrl)
+    override fun addClassForProxy(clazzName: String, proxyUrl: String?) {
+        if (proxyUrl != null) {
+            nothingMatchedProxyConfiguration.addClassForProxy(clazzName, proxyUrl)
         } else {
             getProxyUrlForClass(clazzName)
         }
