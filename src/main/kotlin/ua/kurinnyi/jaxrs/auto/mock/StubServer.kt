@@ -22,7 +22,9 @@ import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.recorder.RecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import ua.kurinnyi.jaxrs.auto.mock.recorder.ResponseDecoder
+import ua.kurinnyi.jaxrs.auto.mock.yaml.ResourceFolderYamlFilesLoader
 import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
+import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlFilesLoader
 import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlMethodStubsLoader
 import java.io.File
 import javax.servlet.Filter
@@ -48,6 +50,8 @@ class StubServer {
     private var defaultExtractingBodyProvider:ExtractingBodyProvider? = null
 
     private var enabledByDefaultGroups:List<String> = emptyList()
+
+    private var yamlFilesLoader:YamlFilesLoader = ResourceFolderYamlFilesLoader
 
     fun setPort(port: Int): StubServer = this.apply{
         this.port = port
@@ -82,19 +86,23 @@ class StubServer {
     }
 
     fun defaultBodyProvider(bodyProvider:BodyProvider):StubServer = this.apply {
-        this.defaultBodyProvider = bodyProvider
+        defaultBodyProvider = bodyProvider
     }
 
     fun defaultExtractingBodyProvider(bodyProvider:ExtractingBodyProvider):StubServer = this.apply {
-        this.defaultExtractingBodyProvider = bodyProvider
+        defaultExtractingBodyProvider = bodyProvider
     }
 
     fun enableGroupsOnStart(vararg groupNames: String):StubServer = this.apply {
-        this.enabledByDefaultGroups = groupNames.toList()
+        enabledByDefaultGroups = groupNames.toList()
     }
 
     fun setRecordsSaver(saver:RecordSaver):StubServer = this.also {
         Recorder.recordSaver = saver
+    }
+
+    fun setYamlFilesLoader(loader:YamlFilesLoader):StubServer = this.apply {
+        yamlFilesLoader = loader
     }
 
     fun addHttpResponseDecoder(encoding:String, decoder:ResponseDecoder):StubServer = this.also {
@@ -148,7 +156,7 @@ class StubServer {
         ResponseFromStubCreator.useJerseyDeserialization = useJerseyDeserialization
         val methodStubsLoader = CompositeMethodStubLoader(
                 KotlinMethodStubsLoader(stubDefinitions, proxyConfiguration),
-                YamlMethodStubsLoader())
+                YamlMethodStubsLoader(yamlFilesLoader))
         GroupSwitchService.loader = methodStubsLoader
 
         JsonUtils.defaultJsonBodyProvider = defaultBodyProvider

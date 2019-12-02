@@ -25,7 +25,7 @@ object RequestProxy {
         val response = client.execute(httpRequest)
         servletResponse.status = response.statusLine.statusCode
         response.allHeaders.forEach{ servletResponse.setHeader(it.name, it.value)}
-        safeCopy(response.entity.content, servletResponse.outputStream)
+        response.entity?.let { safeCopy(it.content, servletResponse.outputStream) }
         servletResponse.flushBuffer()
     }
 

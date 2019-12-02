@@ -9,11 +9,11 @@ import java.io.InputStream
 object YamlObjectMapper {
     val _yamlObjectMapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())
 
-    inline fun <reified T> read(reader: BufferedReader):T =
-        _yamlObjectMapper.readValue(reader, T::class.java)
-
     inline fun <reified T> read(reader: InputStream):T =
         _yamlObjectMapper.readValue(reader, T::class.java)
+
+    inline fun <reified T> read(content: String):T =
+        _yamlObjectMapper.readValue(content, T::class.java)
 
     fun <T> toString(value: T):String =
             _yamlObjectMapper.writeValueAsString(value)

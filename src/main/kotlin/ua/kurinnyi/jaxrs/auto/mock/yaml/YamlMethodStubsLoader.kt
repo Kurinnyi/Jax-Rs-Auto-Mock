@@ -1,72 +1,33 @@
 package ua.kurinnyi.jaxrs.auto.mock.yaml
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import ua.kurinnyi.jaxrs.auto.mock.model.StubsGroup
 import ua.kurinnyi.jaxrs.auto.mock.MethodStubsLoader
 import ua.kurinnyi.jaxrs.auto.mock.kotlin.GroupCallback
 import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
-import java.io.IOException
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.*
+import ua.kurinnyi.jaxrs.auto.mock.model.StubsGroup
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-class YamlMethodStubsLoader : MethodStubsLoader {
+class YamlMethodStubsLoader(private val filesLoader: YamlFilesLoader) : MethodStubsLoader {
+
     override fun getGroupsCallbacks(): List<GroupCallback> = emptyList()
     override fun getGroups(): List<StubsGroup> = emptyList()
-    
-    private var responses: List<ResourceMethodStub>
+
+    private var stubs: List<ResourceMethodStub>
 
     init {
-        responses = getMethodStubResponses()
+        stubs = getMethodStubResponses()
         Executors.newScheduledThreadPool(1)
-                .scheduleAtFixedRate({ responses = getMethodStubResponses() }, 0, 10, TimeUnit.SECONDS)
+                .scheduleAtFixedRate({ stubs = getMethodStubResponses() }, 0, 10, TimeUnit.SECONDS)
     }
 
     override fun getStubs(): List<ResourceMethodStub> {
-        return responses
+        return stubs
     }
 
-    private fun <T> getFolderPath(doWithPath: (Path) -> T) {
-        val resource = javaClass.classLoader.getResource("stubs/") ?: return
-        val uri = resource.toURI()
-        if ("jar" == uri.scheme) {
-            FileSystems.newFileSystem(uri, Collections.emptyMap<String, Any>(), null).use {
-                doWithPath(it.getPath("stubs/"))
-            }
-        } else {
-            doWithPath(Paths.get(uri))
-        }
-    }
-
-    private fun getMethodStubResponses(): List<ResourceMethodStub> {
-        val list:MutableList<List<YamlMethodStub>> = mutableListOf()
-        getFolderPath{ folder ->
-            Files.walk(folder).use { files ->
-                files.filter { it.toString().toLowerCase().endsWith(".yaml") }
-                        .map { readYaml(it)  }
-                        .forEach{list.add(it)}
-            }
-        }
-        return  list.flatten().flatMap { it.toFlatStubs() }
-    }
-
-
-    private fun readYaml(path: Path): List<YamlMethodStub> {
-        return try {
-            Files.newBufferedReader(path).use {
-                YamlObjectMapper.read<MethodStubsHolder>(it).stubs
-            }
-        } catch (e: IOException) {
-            System.err.println("Failed to load yaml: $path")
-            e.printStackTrace()
-            emptyList()
-        }
-    }
+    private fun getMethodStubResponses(): List<ResourceMethodStub> =
+            filesLoader.reloadYamlFilesAsStrings()
+                    .map { YamlObjectMapper.read<MethodStubsHolder>(it).stubs }
+                    .flatten()
+                    .flatMap { it.toFlatStubs() }
 }
