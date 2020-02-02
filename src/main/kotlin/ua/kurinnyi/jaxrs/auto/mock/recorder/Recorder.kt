@@ -49,7 +49,7 @@ object Recorder {
 
             val yamlResponse = YamlMethodStub.Response(
                     code = response.status,
-                    headers = null,
+                    headers = getHeaders(response),
                     body = getResponseDecoder(response).decodeToString(response.getResponseBytes())
             )
 
@@ -59,6 +59,11 @@ object Recorder {
             }
         }
     }
+
+    private fun getHeaders(response: BufferingFilter.ResponseWrapper): List<YamlMethodStub.Header>? =
+        response.headerNames
+                .filterNot { it.toLowerCase() in setOf("content-length", "transfer-encoding") }
+                .map { YamlMethodStub.Header(it, response.getHeader(it))}
 
     private fun getResponseDecoder(response: BufferingFilter.ResponseWrapper) =
             responseDecoders[response.getHeader("Content-Encoding")] ?: ResponseDecoder.NoEncodingDecoder
