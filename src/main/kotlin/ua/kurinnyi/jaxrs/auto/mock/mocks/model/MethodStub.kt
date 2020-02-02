@@ -1,7 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks.model
 
 import ua.kurinnyi.jaxrs.auto.mock.Utils
-import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapter
+import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -10,7 +10,7 @@ open class MethodStub(
         private val method: Method,
         private val arguments: List<ArgumentMatcher>,
         private val requestHeaders: List<HeaderParameter>,
-        private val responseSection:  (ApiAdapter, Array<Any?>) -> Any?,
+        private val responseSection:  (ApiAdapterForResponseGeneration, Array<Any?>) -> Any?,
         private var isActivated: Boolean = true
 ) : ResourceMethodStub {
 
@@ -36,7 +36,7 @@ open class MethodStub(
         method == this.method && paramMatch(args, request) && headersMatch(request) && isActivated
 
     override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
-        val apiAdapter = ApiAdapter(method, response, args ?: emptyArray(), arguments)
+        val apiAdapter = ApiAdapterForResponseGeneration(method, response, args ?: emptyArray(), arguments)
         val responseObject =  responseSection(apiAdapter, args?: emptyArray())
         if (apiAdapter.shouldFlush) {
             response.flushBuffer()

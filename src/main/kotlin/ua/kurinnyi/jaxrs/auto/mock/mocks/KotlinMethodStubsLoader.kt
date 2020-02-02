@@ -14,26 +14,26 @@ class KotlinMethodStubsLoader(stubDefinitions: List<StubsDefinition>, proxyConfi
     private var allLoadedStubs: LoadedStubs
 
     init {
-        val (realtimeStubs, staticStubs) = stubDefinitions.partition { it.isRealTime() }
+        val (realTimeStubs, staticStubs) = stubDefinitions.partition { it.isRealTime() }
         staticLoadedStubs = initStubs(staticStubs, proxyConfiguration)
-        allLoadedStubs = loadRealtimeStubsAndMerge(realtimeStubs, proxyConfiguration)
+        allLoadedStubs = loadRealTimeStubsAndMerge(realTimeStubs, proxyConfiguration)
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate({
-            allLoadedStubs = loadRealtimeStubsAndMerge(realtimeStubs, proxyConfiguration)
+            allLoadedStubs = loadRealTimeStubsAndMerge(realTimeStubs, proxyConfiguration)
         }, 0, 10, TimeUnit.SECONDS)
     }
 
-    private fun loadRealtimeStubsAndMerge(realtimeStubs: List<StubsDefinition>, proxyConfiguration: ProxyConfiguration): LoadedStubs {
-        val realtimeLoadedStubs = initStubs(realtimeStubs, proxyConfiguration)
+    private fun loadRealTimeStubsAndMerge(realTimeStubs: List<StubsDefinition>, proxyConfiguration: ProxyConfiguration): LoadedStubs {
+        val realTimeLoadedStubs = initStubs(realTimeStubs, proxyConfiguration)
         return LoadedStubs(
-                staticLoadedStubs.stubs + realtimeLoadedStubs.stubs,
-                mergeGroups(realtimeLoadedStubs.groups + staticLoadedStubs.groups),
-                staticLoadedStubs.groupsCallbacks + realtimeLoadedStubs.groupsCallbacks)
+                staticLoadedStubs.stubs + realTimeLoadedStubs.stubs,
+                mergeGroups(realTimeLoadedStubs.groups + staticLoadedStubs.groups),
+                staticLoadedStubs.groupsCallbacks + realTimeLoadedStubs.groupsCallbacks)
     }
 
     private fun initStubs(stubs: List<StubsDefinition>, proxyConfiguration: ProxyConfiguration): LoadedStubs {
-        val definitions = stubs.map { it to it.getStubs() }
+        val definitions = stubs.asSequence().map { it to it.getStubs() }
                 .sortedBy { (definition, _) -> definition.getPriority() }
-                .map { (_, stubs) -> stubs }
+                .map { (_, stubs) -> stubs }.toList()
         definitions.forEach {
             it.proxyConfig.proxyClasses.forEach { (clazz, path) -> proxyConfiguration.addClassForProxy(clazz, path) }
             it.proxyConfig.recordClasses.forEach { clazz -> proxyConfiguration.addClassForRecord(clazz) }

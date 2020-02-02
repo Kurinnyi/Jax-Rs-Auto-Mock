@@ -9,7 +9,7 @@ import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse
 
-class ApiAdapter(
+class ApiAdapterForResponseGeneration(
         val method: Method,
         private val response: HttpServletResponse,
         private val methodInvocationValues: Array<Any?>,
@@ -25,12 +25,12 @@ class ApiAdapter(
         return JsonUtils.getObjectFromJson(jsonInfo, templateArgs, method.returnType, method.genericReturnType) as T
     }
 
-    fun code(code: Int) {
+    fun setResponseCode(code: Int) {
         response.status = code
         shouldFlush = true
     }
 
-    fun bodyRaw(body: String) {
+    fun writeBodyRaw(body: String) {
         IOUtils.write(body, response.writer)
         shouldFlush = true
     }
@@ -39,7 +39,7 @@ class ApiAdapter(
         RequestProxy.forwardRequest(path)
     }
 
-    fun record() {
+    fun recordResponse() {
         Recorder.write(method, getParamsConfigForRecorder())
     }
 
@@ -47,7 +47,7 @@ class ApiAdapter(
         response.addHeader(headerName, headerValue)
     }
 
-    fun getParamsConfigForRecorder():List<Recorder.MethodParam>{
+    private fun getParamsConfigForRecorder():List<Recorder.MethodParam>{
         return methodInvocationValues.zip(argumentMatchers).mapIndexed { i, (argValue, argMatcher) ->
             when {
                 argMatcher.matchType == MethodStub.MatchType.IGNORE_IN_RECORD ->

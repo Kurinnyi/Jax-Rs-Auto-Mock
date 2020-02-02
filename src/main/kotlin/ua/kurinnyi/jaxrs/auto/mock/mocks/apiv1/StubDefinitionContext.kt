@@ -5,7 +5,7 @@ import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapter
+import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -231,19 +231,19 @@ class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<Met
     fun matchRegex(regex: String): HeaderValue = matchNullable { it != null && regex.toRegex().matches(it) }
 }
 
-class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter: ApiAdapter) {
+class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter: ApiAdapterForResponseGeneration) {
 
     fun record() {
-        apiAdapter.record()
+        apiAdapter.recordResponse()
     }
 
     fun code(code: Int): RESPONSE? {
-        apiAdapter.code(code)
+        apiAdapter.setResponseCode(code)
         return getReturnValue(apiAdapter.method)
     }
 
     fun bodyRaw(body:String): RESPONSE? {
-        apiAdapter.bodyRaw(body)
+        apiAdapter.writeBodyRaw(body)
         return getReturnValue(apiAdapter.method)
     }
 
@@ -266,7 +266,7 @@ class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter: Api
 
 data class MethodStubBuilder (private val method: Method, val arguments: List<MethodStub.ArgumentMatcher>) {
     internal var requestHeaders: List<MethodStub.HeaderParameter> = listOf()
-    internal var responseSection:  ((ApiAdapter, Array<Any?>) -> Any?)? = null
+    internal var responseSection:  ((ApiAdapterForResponseGeneration, Array<Any?>) -> Any?)? = null
     internal var isActivatedByGroups: Boolean = true
 
     internal val methodStub:MethodStub by lazy {
