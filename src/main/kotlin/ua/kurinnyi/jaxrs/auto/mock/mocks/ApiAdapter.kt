@@ -1,9 +1,10 @@
-package ua.kurinnyi.jaxrs.auto.mock.kotlin
+package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.MethodStub
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse
@@ -36,6 +37,10 @@ class ApiAdapter(
 
     fun proxyTo(path: String) {
         RequestProxy.forwardRequest(path)
+    }
+
+    fun record() {
+        Recorder.write(method, getParamsConfigForRecorder())
     }
 
     fun header(headerName: String, headerValue: String) {

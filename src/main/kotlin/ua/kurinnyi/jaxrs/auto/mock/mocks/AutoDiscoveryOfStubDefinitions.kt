@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.kotlin
+package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import org.reflections.Reflections
 import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl

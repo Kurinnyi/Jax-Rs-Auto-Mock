@@ -3,7 +3,7 @@ package ua.kurinnyi.jaxrs.auto.mock
 import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
-import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method

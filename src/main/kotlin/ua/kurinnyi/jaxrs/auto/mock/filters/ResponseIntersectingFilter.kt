@@ -13,8 +13,6 @@ class ResponseIntersectingFilter : Filter {
         }
     }
 
-
-
     override fun init(filterConfig: FilterConfig?) {
     }
 
@@ -24,7 +22,7 @@ class ResponseIntersectingFilter : Filter {
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
         try {
             chain.doFilter(request, response)
-            taskList.get().forEach{ it(request, response)}
+            taskList.get().forEach{ it(request, response) }
         } finally {
             taskList.remove()
         }

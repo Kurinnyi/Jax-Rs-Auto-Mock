@@ -1,12 +1,12 @@
 package ua.kurinnyi.jaxrs.auto.mock.endpoint
 
 import ua.kurinnyi.jaxrs.auto.mock.GroupSwitchService
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.StubDefinitionContext
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.StubsDefinition
+import ua.kurinnyi.jaxrs.auto.mock.mocks.apiv1.StubDefinitionContext
+import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 
 class GroupResourceImpl : StubsDefinition {
 
-    override fun getStubs(context: StubDefinitionContext) = context.createStubs {
+    override fun getStubs() = StubDefinitionContext().createStubs {
         forClass(GroupResource::class) {
             case { getAll() } then {
                 GroupSwitchService.getAllGroups().map { group ->

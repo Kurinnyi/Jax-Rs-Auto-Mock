@@ -1,6 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.yaml
 
-import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse

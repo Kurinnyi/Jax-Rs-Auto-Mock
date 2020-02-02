@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.model
+package ua.kurinnyi.jaxrs.auto.mock.mocks.model
 
 interface StubsGroup {
     fun name():String

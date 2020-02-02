@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.kotlin
+package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl
 import ua.kurinnyi.jaxrs.auto.mock.JerseyInternalsFilter

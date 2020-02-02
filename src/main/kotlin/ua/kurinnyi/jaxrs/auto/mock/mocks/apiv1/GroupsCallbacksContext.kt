@@ -1,4 +1,6 @@
-package ua.kurinnyi.jaxrs.auto.mock.kotlin
+package ua.kurinnyi.jaxrs.auto.mock.mocks.apiv1
+
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupCallback
 
 class GroupsCallbacksContext {
 
@@ -17,7 +19,3 @@ class GroupsCallbacksContext {
         callbacks.add(GroupCallback(groupName = groupName, onGroupDisabled = callback))
     }
 }
-data class GroupCallback(
-        val groupName:String,
-        val onGroupEnabled: () -> Unit = {},
-        val onGroupDisabled: () -> Unit = {})

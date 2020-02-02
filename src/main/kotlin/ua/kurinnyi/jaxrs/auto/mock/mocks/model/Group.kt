@@ -1,7 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.kotlin
-
-import ua.kurinnyi.jaxrs.auto.mock.model.StubsGroup
-import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
+package ua.kurinnyi.jaxrs.auto.mock.mocks.model
 
 data class Group (val name: String, val methodStubs: List<MethodStub>, var status: GroupStatus) : StubsGroup {
     override fun stubsCount(): Int = methodStubs.size
@@ -9,29 +6,24 @@ data class Group (val name: String, val methodStubs: List<MethodStub>, var statu
     override fun name(): String = name
 
     override fun activate() {
-        methodStubs.forEach{ it.isActivatedByGroups = true}
+        methodStubs.forEach{ it.activate() }
         status = GroupStatus.ACTIVE
     }
 
     override fun deactivate() {
-        methodStubs.forEach{ it.isActivatedByGroups = false}
+        methodStubs.forEach{ it.deactivate() }
         status = GroupStatus.NON_ACTIVE
     }
 
     override fun status(): GroupStatus = status
 
-    fun merge(other:Group):Group{
+    fun merge(other: Group): Group {
         val newStatus = if (status == other.status) status else GroupStatus.PARTIALLY_ACTIVE
         return Group(name, methodStubs + other.methodStubs, newStatus)
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        return other is Group && other.name == name
-    }
+    override fun equals(other: Any?): Boolean = (this === other) || (other is Group && other.name == name)
 
-    override fun hashCode(): Int {
-        return name.hashCode()
-    }
+    override fun hashCode(): Int = name.hashCode()
 }
 

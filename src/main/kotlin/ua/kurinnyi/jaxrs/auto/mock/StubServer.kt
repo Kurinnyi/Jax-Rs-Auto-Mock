@@ -17,8 +17,8 @@ import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import ua.kurinnyi.jaxrs.auto.mock.filters.ResponseIntersectingFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.*
-import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
+import ua.kurinnyi.jaxrs.auto.mock.mocks.*
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.recorder.RecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import ua.kurinnyi.jaxrs.auto.mock.recorder.ResponseDecoder
@@ -151,11 +151,10 @@ class StubServer {
     }
 
     private fun instantiateCommonDependencies(): MethodInvocationHandler {
-        val groupEndpoint = GroupResourceImpl()
-        val stubDefinitions: List<StubsDefinition> = listOf(groupEndpoint) + getStubDefinitions()
+        addStubDefinition(GroupResourceImpl())
         ResponseFromStubCreator.useJerseyDeserialization = useJerseyDeserialization
         val methodStubsLoader = CompositeMethodStubLoader(
-                KotlinMethodStubsLoader(stubDefinitions, proxyConfiguration),
+                KotlinMethodStubsLoader(getStubDefinitions(), proxyConfiguration),
                 YamlMethodStubsLoader(yamlFilesLoader))
         GroupSwitchService.loader = methodStubsLoader
 

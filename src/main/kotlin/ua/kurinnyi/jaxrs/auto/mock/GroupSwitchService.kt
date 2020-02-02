@@ -1,7 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
-import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
-import ua.kurinnyi.jaxrs.auto.mock.model.StubsGroup
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubsGroup
 
 object GroupSwitchService {
 

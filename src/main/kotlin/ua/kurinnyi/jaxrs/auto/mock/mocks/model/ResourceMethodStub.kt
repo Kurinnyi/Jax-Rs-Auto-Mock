@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.model
+package ua.kurinnyi.jaxrs.auto.mock.mocks.model
 
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest

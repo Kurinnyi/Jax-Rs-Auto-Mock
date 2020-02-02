@@ -1,26 +1,26 @@
-package ua.kurinnyi.jaxrs.auto.mock.kotlin
+package ua.kurinnyi.jaxrs.auto.mock.mocks.apiv1
 
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
-import ua.kurinnyi.jaxrs.auto.mock.model.GroupStatus
-import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
+import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapter
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
 
 
-class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
-    internal val stubs: MutableList<MethodStub> = mutableListOf()
-    internal val allGroups: MutableList<Group> = mutableListOf()
-    internal var activeGroups: List<Group> = listOf()
+class StubDefinitionContext {
+    internal val stubs: MutableList<MethodStubBuilder> = mutableListOf()
+    private val allGroups: MutableList<GroupBuilder> = mutableListOf()
+    internal var activeGroups: List<GroupBuilder> = listOf()
+    internal var proxyConfig: CommonProxyConfig = CommonProxyConfig(emptyMap(), emptyList())
 
-    fun createStubs(definitions: StubDefinitionContext.() -> Unit): Pair<List<MethodStub>, List<Group>> {
+    fun createStubs(definitions: StubDefinitionContext.() -> Unit): StubDefinitionData {
         definitions(this)
-        return Pair(stubs.toList(), allGroups.toList())
+        return StubDefinitionData(stubs.map { it.methodStub }, allGroups.map { it.group }, proxyConfig)
     }
 
     fun <RESOURCE : Any> forClass(clazz: KClass<RESOURCE>, definitions: ClazzStubDefinitionContext<RESOURCE>.() -> Unit) {
@@ -29,32 +29,34 @@ class StubDefinitionContext(val proxyConfiguration: ProxyConfiguration) {
 
     fun group(name: String, activeByDefault:Boolean = true, body:() -> Unit){
         val status = if (activeByDefault) GroupStatus.ACTIVE else GroupStatus.NON_ACTIVE
-        val group = Group(name, emptyList(), status)
+        val group = GroupBuilder(name, emptyList(), status)
         if (activeGroups.contains(group)) throw IllegalArgumentException("Group $name contains itself recursively. This is forbidden.")
-        activeGroups += group
+        activeGroups + group
         body()
         allGroups.add(activeGroups.last())
-        activeGroups -= activeGroups.last()
+        activeGroups - activeGroups.last()
     }
 }
 
 class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, private val context: StubDefinitionContext) {
     private var tempArgList: List<MethodStub.ArgumentMatcher> = listOf()
-    private var methodStubs: List<MethodStub> = listOf()
+    private var methodStubs: List<MethodStubBuilder> = listOf()
 
     fun bypassAnyNotMatched(path: String) {
-        context.proxyConfiguration.addClassForProxy(clazz.name, path)
+        val proxyConfig = context.proxyConfig
+        context.proxyConfig = proxyConfig.copy(proxyClasses = proxyConfig.proxyClasses + (clazz.name to path))
     }
 
     fun recordAnyBypassed() {
-        context.proxyConfiguration.addClassForRecord(clazz.name)
+        val proxyConfig = context.proxyConfig
+        context.proxyConfig = proxyConfig.copy(recordClasses = proxyConfig.recordClasses + clazz.name)
     }
 
     fun <RESULT> case(methodCall: RESOURCE.() -> RESULT): MethodStubDefinitionRequestContext<RESULT> {
         methodStubs = listOf()
         val instance = Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { proxy, method, args ->
             checkAllArgumentsSetUp(args, method)
-            methodStubs += MethodStub(clazz, method, tempArgList)
+            methodStubs + MethodStubBuilder(method, tempArgList)
             tempArgList = listOf()
             getReturnValue(method)
         } as RESOURCE
@@ -103,13 +105,13 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
     fun <ARGUMENT> anyInRecord(): ARGUMENT {
         val castedPredicate = { arg: Any? -> true }
-        tempArgList += MethodStub.ArgumentMatcher(MethodStub.MatchType.IGNORE_IN_RECORD, castedPredicate)
+        tempArgList + MethodStub.ArgumentMatcher(MethodStub.MatchType.IGNORE_IN_RECORD, castedPredicate)
         return null as ARGUMENT
     }
 
     fun <ARGUMENT> matchNullable(predicate: (ARGUMENT?) -> Boolean): ARGUMENT {
         val castedPredicate = { arg: Any? -> predicate(arg as ARGUMENT) }
-        tempArgList += MethodStub.ArgumentMatcher(MethodStub.MatchType.MATCH, castedPredicate)
+        tempArgList + MethodStub.ArgumentMatcher(MethodStub.MatchType.MATCH, castedPredicate)
         return null as ARGUMENT
     }
 
@@ -147,7 +149,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
     fun <ARGUMENT> bodyMatch(predicate: (String) -> Boolean): ARGUMENT {
         val castedPredicate = { arg: Any? -> predicate(arg as String) }
-        tempArgList += MethodStub.ArgumentMatcher(MethodStub.MatchType.BODY_MATCH, castedPredicate)
+        tempArgList + MethodStub.ArgumentMatcher(MethodStub.MatchType.BODY_MATCH, castedPredicate)
         return null as ARGUMENT
     }
 
@@ -159,7 +161,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
 }
 
-class MethodStubDefinitionRequestContext<RESULT>(private val methodStubs: List<MethodStub>) {
+class MethodStubDefinitionRequestContext<RESULT>(private val methodStubs: List<MethodStubBuilder>) {
 
     infix fun with(additionalRequestDefinition: MethodStubDefinitionRequestParamsContext.() -> Unit)
             : MethodStubDefinitionRequestContext<RESULT> {
@@ -168,31 +170,39 @@ class MethodStubDefinitionRequestContext<RESULT>(private val methodStubs: List<M
     }
 
     infix fun then(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(Array<Any?>) -> RESULT?) {
-        methodStubs.forEach{ it.responseSection = responseDefinition as MethodStubDefinitionResponseContext<*>.(Array<Any?>) -> RESULT?}
+        setResponseDefinitionToMethodStubs{ responseContext, args -> responseContext.responseDefinition(args)}
     }
-
     infix fun <A1> then1(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1) -> RESULT?) {
-        methodStubs.forEach{ it.responseSection1 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?) -> RESULT?}
+        setResponseDefinitionToMethodStubs{ responseContext, args -> responseContext.responseDefinition(args[0] as A1)}
     }
     infix fun <A1, A2> then2(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2) -> RESULT?) {
-        methodStubs.forEach{ it.responseSection2 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?) -> RESULT?}
+        setResponseDefinitionToMethodStubs{ responseContext, args -> responseContext.responseDefinition(args[0] as A1, args[1] as A2)}
     }
     infix fun <A1, A2, A3> then3(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2, A3) -> RESULT?) {
-        methodStubs.forEach{ it.responseSection3 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?, Any?) -> RESULT?}
+        setResponseDefinitionToMethodStubs{ responseContext, args ->
+            responseContext.responseDefinition(args[0] as A1, args[1] as A2, args[2] as A3)}
     }
     infix fun <A1, A2, A3, A4> then4(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2, A3, A4) -> RESULT?) {
-        methodStubs.forEach{ it.responseSection4 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?, Any?, Any?) -> RESULT?}
+        setResponseDefinitionToMethodStubs{ responseContext, args ->
+            responseContext.responseDefinition(args[0] as A1, args[1] as A2, args[2] as A3, args[3] as A4)}
     }
     infix fun <A1, A2, A3, A4, A5> then5(responseDefinition: MethodStubDefinitionResponseContext<RESULT?>.(A1, A2, A3, A4, A5) -> RESULT?) {
-        methodStubs.forEach{ it.responseSection5 = responseDefinition as MethodStubDefinitionResponseContext<*>.(Any?, Any?, Any?, Any?, Any?) -> RESULT?}
+        setResponseDefinitionToMethodStubs{ responseContext, args ->
+            responseContext.responseDefinition(args[0] as A1, args[1] as A2, args[2] as A3, args[3] as A4, args[4] as A5)}
     }
-
+    private fun setResponseDefinitionToMethodStubs(application: (MethodStubDefinitionResponseContext<RESULT?>, Array<Any?>) -> RESULT?) {
+        methodStubs.forEach {
+            it.responseSection = { apiAdapter, args ->
+                application(MethodStubDefinitionResponseContext(apiAdapter), args)
+            }
+        }
+    }
 }
 
-class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<MethodStub>) {
+class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<MethodStubBuilder>) {
 
     fun header(name: String, value: HeaderValue) {
-        methodStubs.forEach { it.requestHeaders.add(MethodStub.HeaderParameter(name, value.matcher)) }
+        methodStubs.forEach { it.requestHeaders += MethodStub.HeaderParameter(name, value.matcher) }
     }
 
     class HeaderValue private constructor(val matcher: MethodStub.ArgumentMatcher) {
@@ -221,10 +231,10 @@ class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<Met
     fun matchRegex(regex: String): HeaderValue = matchNullable { it != null && regex.toRegex().matches(it) }
 }
 
-class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter:ApiAdapter) {
+class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter: ApiAdapter) {
 
     fun record() {
-        Recorder.write(apiAdapter.method, apiAdapter.getParamsConfigForRecorder())
+        apiAdapter.record()
     }
 
     fun code(code: Int): RESPONSE? {
@@ -252,6 +262,25 @@ class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter:ApiA
 
     fun bodyJson(body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
             apiAdapter.getObjectFromJson(body, templateArgs.toMap())
+}
+
+data class MethodStubBuilder (private val method: Method, val arguments: List<MethodStub.ArgumentMatcher>) {
+    internal var requestHeaders: List<MethodStub.HeaderParameter> = listOf()
+    internal var responseSection:  ((ApiAdapter, Array<Any?>) -> Any?)? = null
+    internal var isActivatedByGroups: Boolean = true
+
+    internal val methodStub:MethodStub by lazy {
+        responseSection?.let {  MethodStub(method, arguments, requestHeaders, it, isActivatedByGroups ) }
+                ?: throw IllegalStateException("Haven't you forgot to add 'then' section to mock for ${method.name}")
+    }
+}
+
+data class GroupBuilder (val name: String, val methodStubs: List<MethodStubBuilder>, var status: GroupStatus) {
+    internal val group:Group by lazy { Group(name, methodStubs.map { it.methodStub }, status) }
+
+    override fun equals(other: Any?): Boolean = (this === other) || (other is Group && other.name == name)
+
+    override fun hashCode(): Int = name.hashCode()
 }
 
 private fun <T>getReturnValue(method: Method): T? {

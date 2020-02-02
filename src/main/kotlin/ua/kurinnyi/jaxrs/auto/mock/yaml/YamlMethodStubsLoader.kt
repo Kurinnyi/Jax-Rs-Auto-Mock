@@ -1,9 +1,9 @@
 package ua.kurinnyi.jaxrs.auto.mock.yaml
 
 import ua.kurinnyi.jaxrs.auto.mock.MethodStubsLoader
-import ua.kurinnyi.jaxrs.auto.mock.kotlin.GroupCallback
-import ua.kurinnyi.jaxrs.auto.mock.model.ResourceMethodStub
-import ua.kurinnyi.jaxrs.auto.mock.model.StubsGroup
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupCallback
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubsGroup
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
