@@ -1,8 +1,9 @@
-package ua.kurinnyi.jaxrs.auto.mock.mocks.model
+package ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl
 
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 

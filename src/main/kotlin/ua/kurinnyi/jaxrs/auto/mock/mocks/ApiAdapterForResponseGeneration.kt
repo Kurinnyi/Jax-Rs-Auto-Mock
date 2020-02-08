@@ -3,7 +3,7 @@ package ua.kurinnyi.jaxrs.auto.mock.mocks
 import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.MethodStub
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.MethodStub
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse

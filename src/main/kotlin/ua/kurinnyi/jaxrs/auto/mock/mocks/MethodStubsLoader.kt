@@ -1,17 +1,20 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubsGroup
-import ua.kurinnyi.jaxrs.auto.mock.MethodStubsLoader
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.Group
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupCallback
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubsGroup
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class KotlinMethodStubsLoader(stubDefinitions: List<StubsDefinition>, proxyConfiguration: ProxyConfiguration) : MethodStubsLoader {
+class MethodStubsLoader(stubDefinitions: List<StubsDefinition>, proxyConfiguration: ProxyConfiguration) {
     private val staticLoadedStubs: LoadedStubs
     private var allLoadedStubs: LoadedStubs
+
+    fun getStubs(): List<ResourceMethodStub> = allLoadedStubs.stubs
+    fun getGroups(): List<StubsGroup> = allLoadedStubs.groups
+    fun getGroupsCallbacks(): List<GroupCallback> = allLoadedStubs.groupsCallbacks
 
     init {
         val (realTimeStubs, staticStubs) = stubDefinitions.partition { it.isRealTime() }
@@ -44,14 +47,23 @@ class KotlinMethodStubsLoader(stubDefinitions: List<StubsDefinition>, proxyConfi
                 stubs.flatMap { it.getGroupsCallbacks() })
     }
 
-    private fun mergeGroups(allGroups: List<Group>): List<Group> {
-        val groupedByNameGroups = allGroups.groupBy { it.name }
-        return groupedByNameGroups.values.map { sameNameGroups -> sameNameGroups.reduce(Group::merge) }
+    private fun mergeGroups(allGroups: List<StubsGroup>): List<StubsGroup> {
+        return allGroups.groupBy { it.name() }.toList()
+                .map { (name, groupsToMerge) ->  GroupsAggregation(name, groupsToMerge)}
     }
 
-    override fun getStubs(): List<ResourceMethodStub> = allLoadedStubs.stubs
-    override fun getGroups(): List<StubsGroup> = allLoadedStubs.groups
-    override fun getGroupsCallbacks(): List<GroupCallback> = allLoadedStubs.groupsCallbacks
+    data class LoadedStubs(val stubs: List<ResourceMethodStub>, val groups: List<StubsGroup>, val groupsCallbacks: List<GroupCallback>)
 
-    data class LoadedStubs(val stubs: List<ResourceMethodStub>, val groups: List<Group>, val groupsCallbacks: List<GroupCallback>)
+    data class GroupsAggregation(val name: String, val groups: List<StubsGroup>) : StubsGroup {
+        override fun name(): String = name
+
+        override fun activate() = groups.forEach{ g -> g.activate()}
+
+        override fun deactivate() = groups.forEach{ g -> g.deactivate()}
+
+        override fun status(): GroupStatus = groups.map { it.status() }
+                .reduceRight{ s1, s2 -> if (s1 != s2) GroupStatus.PARTIALLY_ACTIVE else s1 }
+
+        override fun stubsCount(): Int = groups.map { it.stubsCount() }.sum()
+    }
 }

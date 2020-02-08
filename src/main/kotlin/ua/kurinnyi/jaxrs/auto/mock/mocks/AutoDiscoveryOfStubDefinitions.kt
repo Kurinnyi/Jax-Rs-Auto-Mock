@@ -2,6 +2,7 @@ package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import org.reflections.Reflections
 import ua.kurinnyi.jaxrs.auto.mock.jersey.groups.GroupResourceImpl
+import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlStubsDefinitionsLoader
 
 class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
 
@@ -24,4 +25,5 @@ class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
 
     private fun isInternalInstance(it: Class<out StubsDefinition>) =
             it.name == GroupResourceImpl::class.java.name
+                    || it.name == YamlStubsDefinitionsLoader::class.java.name
 }

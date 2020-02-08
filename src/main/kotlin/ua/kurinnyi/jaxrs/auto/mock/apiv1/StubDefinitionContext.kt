@@ -7,6 +7,8 @@ import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyInternalBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.GroupOfMethodStubs
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.MethodStub
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
@@ -271,16 +273,16 @@ data class MethodStubBuilder (private val method: Method, val arguments: List<Me
     internal var responseSection:  ((ApiAdapterForResponseGeneration, Array<Any?>, MethodStub) -> Any?)? = null
     internal var isActivatedByGroups: Boolean = true
 
-    internal val methodStub:MethodStub by lazy {
-        responseSection?.let {  MethodStub(method, arguments, requestHeaders, it, isActivatedByGroups ) }
+    internal val methodStub: MethodStub by lazy {
+        responseSection?.let { MethodStub(method, arguments, requestHeaders, it, isActivatedByGroups) }
                 ?: throw IllegalStateException("Haven't you forgot to add 'then' section to mock for ${method.name}")
     }
 }
 
 data class GroupBuilder (val name: String, val methodStubs: List<MethodStubBuilder>, var status: GroupStatus) {
-    internal val group:Group by lazy { Group(name, methodStubs.map { it.methodStub }, status) }
+    internal val group: GroupOfMethodStubs by lazy { GroupOfMethodStubs(name, methodStubs.map { it.methodStub }, status) }
 
-    override fun equals(other: Any?): Boolean = (this === other) || (other is Group && other.name == name)
+    override fun equals(other: Any?): Boolean = (this === other) || (other is GroupBuilder && other.name == name)
 
     override fun hashCode(): Int = name.hashCode()
 }

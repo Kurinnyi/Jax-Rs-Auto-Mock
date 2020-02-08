@@ -1,9 +1,10 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
+import ua.kurinnyi.jaxrs.auto.mock.mocks.MethodStubsLoader
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubsGroup
 
-class GroupSwitchService(private val loader:MethodStubsLoader) {
+class GroupSwitchService(private val loader: MethodStubsLoader) {
 
     fun switchGroupStatus(groupName:String, status: GroupStatus){
         val stubsGroup = loader.getGroups().find { it.name() == groupName }

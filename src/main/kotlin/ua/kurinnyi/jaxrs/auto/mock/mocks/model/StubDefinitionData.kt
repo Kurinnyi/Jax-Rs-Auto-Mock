@@ -1,8 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks.model
 
 data class StubDefinitionData(
-        val methodStubs: List<MethodStub> = emptyList(),
-        val groups: List<Group> = emptyList(),
+        val methodStubs: List<ResourceMethodStub> = emptyList(),
+        val groups: List<StubsGroup> = emptyList(),
         val proxyConfig: CommonProxyConfig = CommonProxyConfig(emptyMap(), emptyList()))
 
 data class CommonProxyConfig(val proxyClasses:Map<String, String>, val recordClasses:List<String>)

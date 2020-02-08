@@ -19,6 +19,7 @@ import ua.kurinnyi.jaxrs.auto.mock.recorder.RecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.recorder.ResponseDecoder
 import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
 import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlFilesLoader
+import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlStubsDefinitionsLoader
 import java.io.File
 import javax.servlet.Filter
 import kotlin.reflect.KClass
@@ -99,6 +100,7 @@ class StubServer {
         val tomcat = Tomcat()
         tomcat.setPort(port)
         addStubDefinition(GroupResourceImpl())
+        addStubDefinition(YamlStubsDefinitionsLoader(JerseyDependenciesRegistry.yamlFilesLoader))
         JerseyDependenciesRegistry.stubDefinitions = getStubDefinitions()
         ResponseFromStubCreator.useJerseyDeserialization = useJerseyDeserialization
         enabledByDefaultGroups.forEach{ JerseyDependenciesRegistry.groupSwitchService().switchGroupStatus(it, GroupStatus.ACTIVE) }
