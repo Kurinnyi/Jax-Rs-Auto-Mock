@@ -7,12 +7,11 @@ import org.apache.tomcat.util.descriptor.web.FilterMap
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import org.reflections.Reflections
-import ua.kurinnyi.jaxrs.auto.mock.*
+import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.ExtractingBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.jersey.groups.GroupResourceImpl
 import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.jersey.groups.GroupResourceImpl
 import ua.kurinnyi.jaxrs.auto.mock.mocks.AutoDiscoveryOfStubDefinitions
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
@@ -74,10 +73,6 @@ class StubServer {
 
     fun defaultBodyProvider(bodyProvider:BodyProvider): StubServer = this.apply {
         JerseyDependenciesRegistry.defaultBodyProvider = bodyProvider
-    }
-
-    fun defaultExtractingBodyProvider(bodyProvider:ExtractingBodyProvider): StubServer = this.apply {
-        JerseyDependenciesRegistry.defaultExtractingBodyProvider = bodyProvider
     }
 
     fun enableGroupsOnStart(vararg groupNames: String): StubServer = this.apply {

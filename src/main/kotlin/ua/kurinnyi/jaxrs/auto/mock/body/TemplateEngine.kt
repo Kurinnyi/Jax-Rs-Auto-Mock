@@ -9,7 +9,7 @@ class TemplateEngine {
 
     private val engine = PebbleEngine.Builder().loader(StringLoader()).build()
 
-    fun processTemplate(templateId:String, templateBody:String, arguments:Any): String {
+    fun processTemplate(templateBody:String, arguments:Any): String {
         val context: Map<String, Any?> =
                 if (arguments is Map<*, *>)
                     arguments.mapKeys { (key, _) -> key.toString() }

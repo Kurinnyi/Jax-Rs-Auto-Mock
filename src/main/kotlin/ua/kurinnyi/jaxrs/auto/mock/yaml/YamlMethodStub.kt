@@ -1,5 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.yaml
 
+import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
@@ -10,16 +11,15 @@ data class MethodStubsHolder(val stubs: List<YamlMethodStub>)
 data class FlatYamlMethodStub(val className: String, val methodName: String, val case: YamlMethodStub.Case) : ResourceMethodStub {
     override fun getStubbedClassName() = className
 
-    override fun isMatchingMethod(method: Method, args: Array<Any?>?, request: HttpServletRequest): Boolean {
+    override fun isMatchingMethod(method: Method, args: Array<Any?>?, dependenciesRegistry: DependenciesRegistry): Boolean {
         return method.declaringClass.name == className
                 && method.name == methodName
-                && MethodParamsMatcher.isParamsMatches(args, case.request, request)
+                && MethodParamsMatcher.isParamsMatches(args, case.request, dependenciesRegistry.contextSaveFilter().request)
     }
 
-    override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
-        return ResponseFromStubCreator.getResponseObject(method, case.response, response)
+    override fun produceResponse(method: Method, args: Array<Any?>?,  dependenciesRegistry: DependenciesRegistry): Any? {
+        return ResponseFromStubCreator.getResponseObject(method, case.response, dependenciesRegistry.contextSaveFilter().response)
     }
-
 
 }
 

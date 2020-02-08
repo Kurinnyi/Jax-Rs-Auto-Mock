@@ -26,7 +26,6 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
     override fun requestProxy():RequestProxy = requestProxy
     override fun contextSaveFilter():ContextSaveFilter = contextSaveFilter
     override fun bodyProvider():BodyProvider = defaultBodyProvider
-    override fun extractingBodyProvider():ExtractingBodyProvider = defaultExtractingBodyProvider
     override fun platformUtils() = platformUtils
 
     fun proxyInstanceFactory() = commonDependencies.proxyInstanceFactory
@@ -44,8 +43,7 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
     var proxyConfiguration: ProxyConfiguration = NothingMatchedProxyConfiguration()
     var yamlFilesLoader: YamlFilesLoader = ResourceFolderYamlFilesLoader
     var stubDefinitions: List<StubsDefinition> = emptyList()
-    var defaultBodyProvider: BodyProvider = jacksonBodyProvider
-    var defaultExtractingBodyProvider:ExtractingBodyProvider = FileBodyProvider(defaultBodyProvider)
+    var defaultBodyProvider: BodyProvider = FileBodyProvider(jacksonBodyProvider)
 
     private val recorder: Recorder by lazy {
         Recorder(responseDecoders, recordSaver, contextSaveFilter, responseIntersectingFilter, platformUtils)
@@ -54,7 +52,7 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
         CommonDependencies(yamlFilesLoader, proxyConfiguration, stubDefinitions, this)
     }
     private val jsonUtils: JsonUtils by lazy {
-        JsonUtils(defaultBodyProvider, defaultExtractingBodyProvider, jerseyInternalsFilter, TemplateEngine())
+        JsonUtils(defaultBodyProvider, TemplateEngine())
     }
 
     data class CommonDependencies(val yamlFilesLoader: YamlFilesLoader,

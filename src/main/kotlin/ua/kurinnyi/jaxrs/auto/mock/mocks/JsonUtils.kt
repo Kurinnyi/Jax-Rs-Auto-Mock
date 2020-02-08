@@ -2,13 +2,11 @@ package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.ExtractingBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.TemplateEngine
 import java.lang.reflect.Type
 
 class JsonUtils(
         val defaultJsonBodyProvider: BodyProvider,
-        private val defaultExtractingJsonBodyProvider: ExtractingBodyProvider,
         private val templateEngine: TemplateEngine) {
 
     inline fun <reified T> loadJson(bodyProvider:BodyProvider, jsonInfo:String, vararg templateArgs: Pair<String, Any>): T {
@@ -45,16 +43,13 @@ class JsonUtils(
                               type: Class<T>, genericType: Type): T {
         val bodyJsonTemplate: String = bodyProvider.provideBodyJson(jsonInfo)
         val bodyRealJson = if (templateArgs.isNotEmpty()) {
-            templateEngine.processTemplate(this.hashCode().toString(), bodyJsonTemplate, templateArgs)
+            templateEngine.processTemplate(bodyJsonTemplate, templateArgs)
         } else bodyJsonTemplate
         return bodyProvider.provideBodyObjectFromJson(type, genericType, bodyRealJson)
     }
 
     fun <T> getObjectFromJson(jsonInfo:String, templateArgs: Map<String, Any>, type: Class<T>, genericType: Type): T {
-        val provider = if (defaultExtractingJsonBodyProvider.canExtract(jsonInfo)) {
-            defaultExtractingJsonBodyProvider
-        } else defaultJsonBodyProvider
-        return getObjectFromJson(provider, jsonInfo, templateArgs, type, genericType)
+        return getObjectFromJson(defaultJsonBodyProvider, jsonInfo, templateArgs, type, genericType)
     }
 
     inline fun <reified KEY, reified VALUE> _mapType():ParameterizedTypeImpl =

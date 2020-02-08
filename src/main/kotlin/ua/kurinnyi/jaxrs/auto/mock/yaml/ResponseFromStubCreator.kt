@@ -1,8 +1,10 @@
 package ua.kurinnyi.jaxrs.auto.mock.yaml
 
+import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyDependenciesRegistry
 import ua.kurinnyi.kotlin.patternmatching.PatternMatching.match
 import java.lang.reflect.Method
+import java.lang.reflect.Type
 import javax.servlet.http.HttpServletResponse
 
 object ResponseFromStubCreator {
@@ -28,15 +30,20 @@ object ResponseFromStubCreator {
                     case(ByteArray::class.java).then { body.toByteArray() }
                     case<Class<*>>().and { name == "void" }.then { "" }
                     case<Class<*>>().and { useJerseyDeserialization }.then {
-                        JerseyDependenciesRegistry.jerseyInternalBodyProvider.provideBodyObject(method.returnType, method.genericReturnType, body)
+                        provideBodyObject(JerseyDependenciesRegistry.jerseyInternalBodyProvider, body, method.returnType, method.genericReturnType)
                     }
                     otherwise {
-                        JerseyDependenciesRegistry.jacksonBodyProvider.provideBodyObject(method.returnType, method.genericReturnType, body)
+                        provideBodyObject(JerseyDependenciesRegistry.jacksonBodyProvider, body, method.returnType, method.genericReturnType)
                     }
                 }
             } catch (e: Exception) {
                 throw RuntimeException("Can't map stub into response object", e)
             }
+
+    private fun <T> provideBodyObject(bodyProvider: BodyProvider, jsonInfo:String, type: Class<T>, genericType: Type):T {
+        val bodyJson = bodyProvider.provideBodyJson(jsonInfo)
+        return bodyProvider.provideBodyObjectFromJson(type, genericType, bodyJson)
+    }
 
     private fun setHeaders(servletResponse: HttpServletResponse, headers: List<YamlMethodStub.Header>) {
         headers.forEach { (name, value) -> servletResponse.addHeader(name, value) }
