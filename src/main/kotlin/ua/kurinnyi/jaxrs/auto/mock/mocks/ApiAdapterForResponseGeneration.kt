@@ -43,9 +43,11 @@ class ApiAdapterForResponseGeneration(
         Recorder.write(method, getParamsConfigForRecorder())
     }
 
-    fun header(headerName: String, headerValue: String) {
+    fun setResponseHeader(headerName: String, headerValue: String) {
         response.addHeader(headerName, headerValue)
     }
+
+    fun <T> getReturnValue(): T? = Utils.getReturnValue(method)
 
     private fun getParamsConfigForRecorder():List<Recorder.MethodParam>{
         return methodInvocationValues.zip(argumentMatchers).mapIndexed { i, (argValue, argMatcher) ->

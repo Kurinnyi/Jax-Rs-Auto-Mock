@@ -58,7 +58,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
             checkAllArgumentsSetUp(args, method)
             methodStubs + MethodStubBuilder(method, tempArgList)
             tempArgList = listOf()
-            getReturnValue(method)
+            Utils.getReturnValue(method)
         } as RESOURCE
         methodCall(instance)
 
@@ -239,22 +239,22 @@ class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter: Api
 
     fun code(code: Int): RESPONSE? {
         apiAdapter.setResponseCode(code)
-        return getReturnValue(apiAdapter.method)
+        return apiAdapter.getReturnValue()
     }
 
     fun bodyRaw(body:String): RESPONSE? {
         apiAdapter.writeBodyRaw(body)
-        return getReturnValue(apiAdapter.method)
+        return apiAdapter.getReturnValue()
     }
 
     fun proxyTo(path: String): RESPONSE? {
         apiAdapter.proxyTo(path)
-        return getReturnValue(apiAdapter.method)
+        return apiAdapter.getReturnValue()
     }
 
     fun header(headerName: String, headerValue: String): RESPONSE? {
-        apiAdapter.header(headerName, headerValue)
-        return getReturnValue(apiAdapter.method)
+        apiAdapter.setResponseHeader(headerName, headerValue)
+        return apiAdapter.getReturnValue()
     }
 
     fun bodyJson(bodyProvider: BodyProvider, body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
@@ -283,17 +283,6 @@ data class GroupBuilder (val name: String, val methodStubs: List<MethodStubBuild
     override fun hashCode(): Int = name.hashCode()
 }
 
-private fun <T>getReturnValue(method: Method): T? {
-    val result =  when (method.returnType) {
-        Int::class.java -> 0
-        Long::class.java -> 0L
-        Double::class.java -> 0.0
-        Float::class.java -> false
-        Boolean::class.java -> false
-        else -> null
-    }
-    return result as T?
-}
 typealias BY_JACKSON = JacksonBodyProvider
 typealias BY_JERSEY = JerseyInternalBodyProvider
 typealias FROM_FILE = FileBodyProvider
