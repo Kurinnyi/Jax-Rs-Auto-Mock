@@ -1,21 +1,19 @@
-package ua.kurinnyi.jaxrs.auto.mock.body
+package ua.kurinnyi.jaxrs.auto.mock.jersey
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import java.lang.reflect.Type
 
-class JacksonBodyProvider: BodyProvider {
-    private val objectMapper = ObjectMapper()
-
+class JerseyInternalBodyProvider(private val jerseyInternalsFilter: JerseyInternalsFilter): BodyProvider {
     override fun <T> provideBodyObjectFromJson(type: Class<T>, genericType: Type, bodyJson: String) =
             provideBodyObject(type, genericType, bodyJson)
 
     override fun provideBodyJson(body: String): String  = body
 
     override fun <T> provideBodyObject(type:Class<T>, genericType: Type, body: String): T {
-        return objectMapper.readValue(body, type)
+        return jerseyInternalsFilter.prepareResponse(type, genericType, body)
     }
 
     override fun <T> objectToJson(value: T, type: Class<T>, genericType: Type): String {
-        return objectMapper.writeValueAsString(value)
+        return jerseyInternalsFilter.toJson(value, type, genericType)
     }
 }

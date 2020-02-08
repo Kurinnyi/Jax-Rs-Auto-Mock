@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.endpoint
+package ua.kurinnyi.jaxrs.auto.mock.jersey.groups
 
 import javax.ws.rs.GET
 import javax.ws.rs.PUT

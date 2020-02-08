@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock
+package ua.kurinnyi.jaxrs.auto.mock.jersey
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory

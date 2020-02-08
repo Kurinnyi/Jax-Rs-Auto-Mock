@@ -1,17 +1,17 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
-import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
-import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.util.*
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
-class MethodInvocationHandler(private val methodStubsLoader: MethodStubsLoader, private val proxyConfiguration: ProxyConfiguration) : InvocationHandler {
+class MethodInvocationHandler(
+        private val methodStubsLoader: MethodStubsLoader,
+        private val proxyConfiguration: ProxyConfiguration,
+        private val dependenciesRegistry: DependenciesRegistry
+) : InvocationHandler {
 
     override fun invoke(proxy: Any, method: Method, args: Array<Any?>?): Any? {
         val interfaceName = getInterfaceName(proxy)
@@ -20,7 +20,7 @@ class MethodInvocationHandler(private val methodStubsLoader: MethodStubsLoader, 
             "equals" -> proxy === args!![0]
             "toString" -> interfaceName
             else -> {
-                findMatchingStub(method, args, proxy).produceResponse(method, args, ContextSaveFilter.response)
+                findMatchingStub(method, args, proxy).produceResponse(method, args, dependenciesRegistry)
             }
         }
     }
@@ -28,22 +28,22 @@ class MethodInvocationHandler(private val methodStubsLoader: MethodStubsLoader, 
     private fun findMatchingStub(method: Method, args: Array<Any?>?, proxy: Any): ResourceMethodStub {
         val stubs = methodStubsLoader.getStubs()
         val interfaceName = getInterfaceName(proxy)
-        val matchingStub = stubs.firstOrNull { it.isMatchingMethod(method, args, ContextSaveFilter.request) }
+        val matchingStub = stubs.firstOrNull { it.isMatchingMethod(method, args, dependenciesRegistry) }
         if (proxyConfiguration.shouldClassBeProxied(interfaceName, matchingStub != null)){
             if (proxyConfiguration.shouldRecord(interfaceName)) {
-                Recorder.writeExactMatch(method, args)
+                dependenciesRegistry.recorder().writeExactMatch(method, args)
             }
-            return ProxyingResourceMethodStub(proxyConfiguration.getProxyUrl(interfaceName))
+            return ProxyingResourceMethodStub(proxyConfiguration.getProxyUrl(interfaceName), dependenciesRegistry.requestProxy())
         }
         verifyClassStubbed(stubs, interfaceName)
         return matchingStub ?: throw StubNotFoundException("No stubs matches request: $interfaceName.${method.name}(${Arrays.toString(args)})")
     }
 
-    private class ProxyingResourceMethodStub(private val proxyPath: String) : ResourceMethodStub {
-        override fun isMatchingMethod(method: Method, args: Array<Any?>?, request: HttpServletRequest): Boolean = true
+    private class ProxyingResourceMethodStub(private val proxyPath: String, private val requestProxy: RequestProxy) : ResourceMethodStub {
+        override fun isMatchingMethod(method: Method, args: Array<Any?>?, dependenciesRegistry: DependenciesRegistry): Boolean = true
 
-        override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
-            RequestProxy.forwardRequest(proxyPath)
+        override fun produceResponse(method: Method, args: Array<Any?>?, dependenciesRegistry: DependenciesRegistry): Any? {
+            requestProxy.forwardRequest(proxyPath)
             return null
         }
 

@@ -1,10 +1,9 @@
 package ua.kurinnyi.jaxrs.auto.mock.yaml
 
-import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyDependenciesRegistry
+import ua.kurinnyi.kotlin.patternmatching.PatternMatching.match
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse
-import ua.kurinnyi.kotlin.patternmatching.PatternMatching.match
 
 object ResponseFromStubCreator {
     var useJerseyDeserialization: Boolean = false
@@ -29,10 +28,10 @@ object ResponseFromStubCreator {
                     case(ByteArray::class.java).then { body.toByteArray() }
                     case<Class<*>>().and { name == "void" }.then { "" }
                     case<Class<*>>().and { useJerseyDeserialization }.then {
-                        JerseyInternalBodyProvider.provideBodyObject(method.returnType, method.genericReturnType, body)
+                        JerseyDependenciesRegistry.jerseyInternalBodyProvider.provideBodyObject(method.returnType, method.genericReturnType, body)
                     }
                     otherwise {
-                        JacksonBodyProvider.provideBodyObject(method.returnType, method.genericReturnType, body)
+                        JerseyDependenciesRegistry.jacksonBodyProvider.provideBodyObject(method.returnType, method.genericReturnType, body)
                     }
                 }
             } catch (e: Exception) {

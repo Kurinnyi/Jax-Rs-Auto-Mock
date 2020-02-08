@@ -1,6 +1,5 @@
-package ua.kurinnyi.jaxrs.auto.mock
+package ua.kurinnyi.jaxrs.auto.mock.jersey
 
-import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.ext.ExceptionMapper
 import javax.ws.rs.ext.Provider
@@ -12,8 +11,10 @@ class NotFoundExceptionMapper : ErrorHandler<NotFoundException>, ExceptionMapper
     override fun getMessage(exception: NotFoundException) =
             "There is no resource interface in class path that could match request: ${getRequestUrl()}"
 
-    private fun getRequestUrl() =
-            "${ContextSaveFilter.request.method}:${ContextSaveFilter.request.requestURI}${getQueryString()}"
+    private fun getRequestUrl(): String {
+        val request = JerseyDependenciesRegistry.contextSaveFilter().request
+        return "${request.method}:${request.requestURI}${getQueryString()}"
+    }
 
-    private fun getQueryString() = ContextSaveFilter.request.queryString?.let { "?$it" } ?: ""
+    private fun getQueryString() = JerseyDependenciesRegistry.contextSaveFilter().request.queryString?.let { "?$it" } ?: ""
 }

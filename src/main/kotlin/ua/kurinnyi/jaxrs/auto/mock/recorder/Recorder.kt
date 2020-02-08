@@ -1,8 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.recorder
 
-import ua.kurinnyi.jaxrs.auto.mock.Utils
+import ua.kurinnyi.jaxrs.auto.mock.PlatformUtils
 import ua.kurinnyi.jaxrs.auto.mock.Utils.bodyAsString
-import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingFilter
+import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingResponseWrapper
 import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
 import ua.kurinnyi.jaxrs.auto.mock.filters.ResponseIntersectingFilter
 import ua.kurinnyi.jaxrs.auto.mock.yaml.MethodStubsHolder
@@ -10,10 +10,15 @@ import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlMethodStub
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 
-object Recorder {
+class Recorder(
+        decoders: List<ResponseDecoder>,
+        private val recordSaver: RecordSaver,
+        private val contextSaveFilter: ContextSaveFilter,
+        private val responseIntersectingFilter: ResponseIntersectingFilter,
+        private val platformUtils: PlatformUtils
+) {
 
-    val responseDecoders = mutableMapOf<String, ResponseDecoder>()
-    var recordSaver: RecordSaver = ConsoleRecordSaver
+    private val responseDecoders = decoders.flatMap { it.encodings().map { encoding -> encoding to it } }.toMap()
 
     private val recordedCalls = ConcurrentHashMap<Method, Map<YamlMethodStub.Request, YamlMethodStub.Response>>()
 
@@ -21,7 +26,7 @@ object Recorder {
         val methodParams = (paramValues ?: emptyArray()).zip(method.parameters)
                 .map { (argValue, methodParam) ->
                     when {
-                        Utils.isHttpBody(methodParam) -> Recorder.MethodParam(Recorder.ParamProcessingWay.BODY, null)
+                        platformUtils.isHttpBody(methodParam) -> Recorder.MethodParam(Recorder.ParamProcessingWay.BODY, null)
                         else -> Recorder.MethodParam(Recorder.ParamProcessingWay.PARAM, argValue.toString())
                     }
                 }
@@ -29,8 +34,8 @@ object Recorder {
     }
 
     fun write(method: Method, methodParams: List<MethodParam>) {
-        ResponseIntersectingFilter.addTask { _, response ->
-            response as BufferingFilter.ResponseWrapper
+        responseIntersectingFilter.addTask { _, response ->
+            response as BufferingResponseWrapper
             val request = YamlMethodStub.Request(
                     headerParameters = emptyList(),
                     methodParameters = methodParams.map {
@@ -42,7 +47,7 @@ object Recorder {
                                 },
                                 value = when (it.paramProcessingWay) {
                                     ParamProcessingWay.PARAM, ParamProcessingWay.IGNORE -> it.value
-                                    ParamProcessingWay.BODY -> bodyAsString(ContextSaveFilter.request)
+                                    ParamProcessingWay.BODY -> bodyAsString(contextSaveFilter.request)
                                 }
                         )
                     })
@@ -60,12 +65,12 @@ object Recorder {
         }
     }
 
-    private fun getHeaders(response: BufferingFilter.ResponseWrapper): List<YamlMethodStub.Header>? =
+    private fun getHeaders(response: BufferingResponseWrapper): List<YamlMethodStub.Header>? =
         response.headerNames
                 .filterNot { it.toLowerCase() in setOf("content-length", "transfer-encoding") }
                 .map { YamlMethodStub.Header(it, response.getHeader(it))}
 
-    private fun getResponseDecoder(response: BufferingFilter.ResponseWrapper) =
+    private fun getResponseDecoder(response: BufferingResponseWrapper) =
             responseDecoders[response.getHeader("Content-Encoding")] ?: ResponseDecoder.NoEncodingDecoder
 
     private fun mergeRecords(method: Method, request: YamlMethodStub.Request, response: YamlMethodStub.Response):

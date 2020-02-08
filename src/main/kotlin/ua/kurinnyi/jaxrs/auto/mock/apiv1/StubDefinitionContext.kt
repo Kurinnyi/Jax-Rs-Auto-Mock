@@ -1,10 +1,10 @@
-package ua.kurinnyi.jaxrs.auto.mock.mocks.apiv1
+package ua.kurinnyi.jaxrs.auto.mock.apiv1
 
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.JerseyInternalBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyInternalBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
 import java.lang.reflect.Method
@@ -192,8 +192,8 @@ class MethodStubDefinitionRequestContext<RESULT>(private val methodStubs: List<M
     }
     private fun setResponseDefinitionToMethodStubs(application: (MethodStubDefinitionResponseContext<RESULT?>, Array<Any?>) -> RESULT?) {
         methodStubs.forEach {
-            it.responseSection = { apiAdapter, args ->
-                application(MethodStubDefinitionResponseContext(apiAdapter), args)
+            it.responseSection = { apiAdapter, args, methodStub ->
+                application(MethodStubDefinitionResponseContext(apiAdapter, methodStub), args)
             }
         }
     }
@@ -231,10 +231,12 @@ class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<Met
     fun matchRegex(regex: String): HeaderValue = matchNullable { it != null && regex.toRegex().matches(it) }
 }
 
-class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter: ApiAdapterForResponseGeneration) {
+class MethodStubDefinitionResponseContext<RESPONSE> (
+        private val apiAdapter: ApiAdapterForResponseGeneration,
+        private val methodStub: MethodStub) {
 
     fun record() {
-        apiAdapter.recordResponse()
+        apiAdapter.recordResponse(methodStub.arguments)
     }
 
     fun code(code: Int): RESPONSE? {
@@ -266,7 +268,7 @@ class MethodStubDefinitionResponseContext<RESPONSE> (private val apiAdapter: Api
 
 data class MethodStubBuilder (private val method: Method, val arguments: List<MethodStub.ArgumentMatcher>) {
     internal var requestHeaders: List<MethodStub.HeaderParameter> = listOf()
-    internal var responseSection:  ((ApiAdapterForResponseGeneration, Array<Any?>) -> Any?)? = null
+    internal var responseSection:  ((ApiAdapterForResponseGeneration, Array<Any?>, MethodStub) -> Any?)? = null
     internal var isActivatedByGroups: Boolean = true
 
     internal val methodStub:MethodStub by lazy {

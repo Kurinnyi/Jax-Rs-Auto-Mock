@@ -1,7 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import org.reflections.Reflections
-import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl
+import ua.kurinnyi.jaxrs.auto.mock.jersey.groups.GroupResourceImpl
 
 class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
 

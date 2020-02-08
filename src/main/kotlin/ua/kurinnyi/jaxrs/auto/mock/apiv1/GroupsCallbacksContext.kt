@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.mocks.apiv1
+package ua.kurinnyi.jaxrs.auto.mock.apiv1
 
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupCallback
 

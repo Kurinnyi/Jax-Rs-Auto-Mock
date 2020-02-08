@@ -1,16 +1,16 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks.model
 
+import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 open class MethodStub(
         private val method: Method,
-        private val arguments: List<ArgumentMatcher>,
+        val arguments: List<ArgumentMatcher>,
         private val requestHeaders: List<HeaderParameter>,
-        private val responseSection:  (ApiAdapterForResponseGeneration, Array<Any?>) -> Any?,
+        private val responseSection:  (ApiAdapterForResponseGeneration, Array<Any?>, MethodStub) -> Any?,
         private var isActivated: Boolean = true
 ) : ResourceMethodStub {
 
@@ -32,12 +32,18 @@ open class MethodStub(
 
     override fun getStubbedClassName(): String = method.declaringClass.name
 
-    override fun isMatchingMethod(method: Method, args: Array<Any?>?, request: HttpServletRequest): Boolean =
-        method == this.method && paramMatch(args, request) && headersMatch(request) && isActivated
+    override fun isMatchingMethod(method: Method, args: Array<Any?>?, dependenciesRegistry: DependenciesRegistry): Boolean {
+        val request = dependenciesRegistry.contextSaveFilter().request
+        return method == this.method && paramMatch(args, request) && headersMatch(request) && isActivated
+    }
 
-    override fun produceResponse(method: Method, args: Array<Any?>?, response: HttpServletResponse): Any? {
-        val apiAdapter = ApiAdapterForResponseGeneration(method, response, args ?: emptyArray(), arguments)
-        val responseObject =  responseSection(apiAdapter, args?: emptyArray())
+    override fun produceResponse(
+            method: Method,
+            args: Array<Any?>?,
+            dependenciesRegistry: DependenciesRegistry): Any? {
+        val response = dependenciesRegistry.contextSaveFilter().response
+        val apiAdapter = ApiAdapterForResponseGeneration(method, response, args ?: emptyArray(), dependenciesRegistry)
+        val responseObject =  responseSection(apiAdapter, args?: emptyArray(), this)
         if (apiAdapter.shouldFlush) {
             response.flushBuffer()
         }

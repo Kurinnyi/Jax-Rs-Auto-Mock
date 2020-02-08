@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.endpoint
+package ua.kurinnyi.jaxrs.auto.mock.jersey.groups
 
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
 

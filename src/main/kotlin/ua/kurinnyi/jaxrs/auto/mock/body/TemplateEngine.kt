@@ -5,12 +5,12 @@ import com.mitchellbosecke.pebble.loader.StringLoader
 import java.io.StringWriter
 
 
-object TemplateEngine {
+class TemplateEngine {
 
     private val engine = PebbleEngine.Builder().loader(StringLoader()).build()
 
     fun processTemplate(templateId:String, templateBody:String, arguments:Any): String {
-        val context =
+        val context: Map<String, Any?> =
                 if (arguments is Map<*, *>)
                     arguments.mapKeys { (key, _) -> key.toString() }
                 else mapOf("args" to arguments)

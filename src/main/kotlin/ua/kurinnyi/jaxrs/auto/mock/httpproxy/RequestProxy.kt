@@ -11,13 +11,13 @@ import java.io.OutputStream
 import javax.servlet.http.HttpServletRequest
 
 
-object RequestProxy {
+class RequestProxy(private val contextSaveFilter: ContextSaveFilter) {
 
     private val client = HttpClients.createDefault()
 
     fun forwardRequest(path: String) {
-        val servletRequest = ContextSaveFilter.request
-        val servletResponse = ContextSaveFilter.response
+        val servletRequest = contextSaveFilter.request
+        val servletResponse = contextSaveFilter.response
         val url = formatNewUrl(path, servletRequest)
         println("Proxying request ${servletRequest.method}:$url")
         val httpRequest = getHttpRequest(url, servletRequest)

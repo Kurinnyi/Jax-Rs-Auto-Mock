@@ -21,4 +21,8 @@ class FileBodyProvider(private val bodyProvider: BodyProvider) : ExtractingBodyP
                 ?: throw StubNotFoundException("Json file $fileName not found")
         return jsonAsStream.use { IOUtils.toString(it) }
     }
+
+    override fun <T> objectToJson(value: T, type: Class<T>, genericType: Type): String {
+        return bodyProvider.objectToJson(value, type, genericType)
+    }
 }

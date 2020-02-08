@@ -6,21 +6,19 @@ import javax.servlet.http.HttpServletResponse
 
 class ContextSaveFilter : Filter {
 
-    companion object {
-        private val requestHolder = ThreadLocal<BufferingFilter.RequestWrapper>()
-        private val responseHolder = ThreadLocal<HttpServletResponse>()
+    private val requestHolder = ThreadLocal<BufferingRequestWrapper>()
+    private val responseHolder = ThreadLocal<HttpServletResponse>()
 
-        val request: HttpServletRequest
-            get() = requestHolder.get()
-        val response: HttpServletResponse
-            get() = responseHolder.get()
-    }
+    val request: HttpServletRequest
+        get() = requestHolder.get()
+    val response: HttpServletResponse
+        get() = responseHolder.get()
 
     override fun init(filterConfig: FilterConfig) {
     }
 
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
-        requestHolder.set(request as BufferingFilter.RequestWrapper)
+        requestHolder.set(request as BufferingRequestWrapper)
         responseHolder.set(response as HttpServletResponse)
         try {
             chain.doFilter(request, response)

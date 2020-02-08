@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock
+package ua.kurinnyi.jaxrs.auto.mock.jersey
 
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
