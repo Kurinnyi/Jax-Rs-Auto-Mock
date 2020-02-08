@@ -5,23 +5,23 @@ import ua.kurinnyi.jaxrs.auto.mock.StubNotFoundException
 import java.lang.reflect.Type
 
 class FileBodyProvider(private val bodyProvider: BodyProvider): BodyProvider {
-    override fun <T> provideBodyObjectFromJson(type: Class<T>, genericType: Type, bodyJson: String):T =
-        bodyProvider.provideBodyObjectFromJson(type, genericType, bodyJson)
+    override fun <T> provideBodyObjectFromString(type: Class<T>, genericType: Type, bodyString: String):T =
+        bodyProvider.provideBodyObjectFromString(type, genericType, bodyString)
 
-    override fun provideBodyJson(body: String): String =
-        if (body.startsWith("/")) {
-            readFile(body)
+    override fun provideBodyString(bodyInformation: String): String =
+        if (bodyInformation.startsWith("/")) {
+            readFile(bodyInformation)
         } else {
-            body
+            bodyInformation
         }
 
     private fun readFile(fileName: String): String {
-        val jsonAsStream = this.javaClass.getResourceAsStream(fileName)
-                ?: throw StubNotFoundException("Json file $fileName not found")
-        return jsonAsStream.use { IOUtils.toString(it) }
+        val fileAsStream = this.javaClass.getResourceAsStream(fileName)
+                ?: throw StubNotFoundException("File $fileName not found")
+        return fileAsStream.use { IOUtils.toString(it) }
     }
 
-    override fun <T> objectToJson(value: T, type: Class<T>, genericType: Type): String {
-        return bodyProvider.objectToJson(value, type, genericType)
+    override fun <T> objectToString(value: T, type: Class<T>, genericType: Type): String {
+        return bodyProvider.objectToString(value, type, genericType)
     }
 }

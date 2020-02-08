@@ -6,11 +6,11 @@ import java.lang.reflect.Type
 class JacksonBodyProvider: BodyProvider {
     private val objectMapper = ObjectMapper()
 
-    override fun <T> provideBodyObjectFromJson(type: Class<T>, genericType: Type, bodyJson: String):T =
-            objectMapper.readValue(bodyJson, type)
+    override fun <T> provideBodyObjectFromString(type: Class<T>, genericType: Type, bodyString: String):T =
+            objectMapper.readValue(bodyString, type)
 
-    override fun provideBodyJson(body: String): String  = body
+    override fun provideBodyString(bodyInformation: String): String  = bodyInformation
 
-    override fun <T> objectToJson(value: T, type: Class<T>, genericType: Type): String =
+    override fun <T> objectToString(value: T, type: Class<T>, genericType: Type): String =
         objectMapper.writeValueAsString(value)
 }

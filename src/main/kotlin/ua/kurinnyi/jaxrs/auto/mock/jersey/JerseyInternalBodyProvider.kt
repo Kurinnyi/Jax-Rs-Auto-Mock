@@ -4,12 +4,12 @@ import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import java.lang.reflect.Type
 
 class JerseyInternalBodyProvider(private val jerseyInternalsFilter: JerseyInternalsFilter): BodyProvider {
-    override fun <T> provideBodyObjectFromJson(type: Class<T>, genericType: Type, bodyJson: String) =
-            jerseyInternalsFilter.prepareResponse(type, genericType, bodyJson)
+    override fun <T> provideBodyObjectFromString(type: Class<T>, genericType: Type, bodyString: String) =
+            jerseyInternalsFilter.prepareResponse(type, genericType, bodyString)
 
-    override fun provideBodyJson(body: String): String  = body
+    override fun provideBodyString(bodyInformation: String): String  = bodyInformation
 
-    override fun <T> objectToJson(value: T, type: Class<T>, genericType: Type): String {
+    override fun <T> objectToString(value: T, type: Class<T>, genericType: Type): String {
         return jerseyInternalsFilter.toJson(value, type, genericType)
     }
 }

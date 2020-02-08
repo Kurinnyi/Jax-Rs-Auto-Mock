@@ -5,7 +5,7 @@ import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyInternalBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.ApiAdapterForResponseGeneration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.GroupOfMethodStubs
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.MethodStub
@@ -262,10 +262,10 @@ class MethodStubDefinitionResponseContext<RESPONSE> (
     }
 
     fun bodyJson(bodyProvider: BodyProvider, body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
-            apiAdapter.getObjectFromJson(bodyProvider, body, templateArgs.toMap())
+            apiAdapter.getObjectFromString(bodyProvider, body, templateArgs.toMap())
 
     fun bodyJson(body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
-            apiAdapter.getObjectFromJson(body, templateArgs.toMap())
+            apiAdapter.getObjectFromString(body, templateArgs.toMap())
 }
 
 data class MethodStubBuilder (private val method: Method, val arguments: List<MethodStub.ArgumentMatcher>) {

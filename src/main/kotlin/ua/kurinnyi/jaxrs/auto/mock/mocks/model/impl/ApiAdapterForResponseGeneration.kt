@@ -1,9 +1,8 @@
-package ua.kurinnyi.jaxrs.auto.mock.mocks
+package ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl
 
 import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.MethodStub
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse
@@ -16,14 +15,14 @@ class ApiAdapterForResponseGeneration(
 
     var shouldFlush = false
 
-    fun <T> getObjectFromJson(bodyProvider:BodyProvider, jsonInfo:String, templateArgs: Map<String, Any>): T {
-        return dependenciesRegistry.jsonUtils()
-                .getObjectFromJson(bodyProvider, jsonInfo, templateArgs, method.returnType, method.genericReturnType) as T
+    fun <T> getObjectFromString(bodyProvider:BodyProvider, stringInfo:String, templateArgs: Map<String, Any>): T {
+        return dependenciesRegistry.serialisationUtils()
+                .getObjectFromString(bodyProvider, stringInfo, templateArgs, method.returnType, method.genericReturnType) as T
     }
 
-    fun <T> getObjectFromJson(jsonInfo:String, templateArgs: Map<String, Any>): T {
-        return dependenciesRegistry.jsonUtils()
-                .getObjectFromJson(jsonInfo, templateArgs, method.returnType, method.genericReturnType) as T
+    fun <T> getObjectFromString(objectInfo:String, templateArgs: Map<String, Any>): T {
+        return dependenciesRegistry.serialisationUtils()
+                .getObjectFromString(objectInfo, templateArgs, method.returnType, method.genericReturnType) as T
     }
 
     fun setResponseCode(code: Int) {

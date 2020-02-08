@@ -13,7 +13,7 @@ import ua.kurinnyi.jaxrs.auto.mock.filters.ResponseIntersectingFilter
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.NothingMatchedProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
-import ua.kurinnyi.jaxrs.auto.mock.mocks.JsonUtils
+import ua.kurinnyi.jaxrs.auto.mock.mocks.SerialisationUtils
 import ua.kurinnyi.jaxrs.auto.mock.mocks.MethodStubsLoader
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.recorder.ConsoleRecordSaver
@@ -27,7 +27,7 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
 
     override fun recorder() = recorder
     override fun groupSwitchService() = commonDependencies.groupSwitchService
-    override fun jsonUtils():JsonUtils = jsonUtils
+    override fun serialisationUtils():SerialisationUtils = SERIALISATION_UTILS
     override fun requestProxy():RequestProxy = requestProxy
     override fun contextSaveFilter():ContextSaveFilter = contextSaveFilter
     override fun bodyProvider():BodyProvider = defaultBodyProvider
@@ -56,8 +56,8 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
     private val commonDependencies: CommonDependencies by lazy {
         CommonDependencies(proxyConfiguration, stubDefinitions, this)
     }
-    private val jsonUtils: JsonUtils by lazy {
-        JsonUtils(defaultBodyProvider, TemplateEngine())
+    private val SERIALISATION_UTILS: SerialisationUtils by lazy {
+        SerialisationUtils(defaultBodyProvider, TemplateEngine())
     }
 
     data class CommonDependencies(val proxyConfiguration: ProxyConfiguration,

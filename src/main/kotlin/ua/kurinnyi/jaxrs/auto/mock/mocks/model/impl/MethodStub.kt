@@ -2,7 +2,6 @@ package ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl
 
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.Utils
-import ua.kurinnyi.jaxrs.auto.mock.mocks.ApiAdapterForResponseGeneration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
@@ -43,7 +42,8 @@ open class MethodStub(
             args: Array<Any?>?,
             dependenciesRegistry: DependenciesRegistry): Any? {
         val response = dependenciesRegistry.contextSaveFilter().response
-        val apiAdapter = ApiAdapterForResponseGeneration(method, response, args ?: emptyArray(), dependenciesRegistry)
+        val apiAdapter = ApiAdapterForResponseGeneration(method, response, args
+                ?: emptyArray(), dependenciesRegistry)
         val responseObject =  responseSection(apiAdapter, args?: emptyArray(), this)
         if (apiAdapter.shouldFlush) {
             response.flushBuffer()

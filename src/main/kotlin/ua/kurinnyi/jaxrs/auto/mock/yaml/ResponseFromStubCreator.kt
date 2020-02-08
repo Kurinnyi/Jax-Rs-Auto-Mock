@@ -40,9 +40,9 @@ object ResponseFromStubCreator {
                 throw RuntimeException("Can't map stub into response object", e)
             }
 
-    private fun <T> provideBodyObject(bodyProvider: BodyProvider, jsonInfo:String, type: Class<T>, genericType: Type):T {
-        val bodyJson = bodyProvider.provideBodyJson(jsonInfo)
-        return bodyProvider.provideBodyObjectFromJson(type, genericType, bodyJson)
+    private fun <T> provideBodyObject(bodyProvider: BodyProvider, objectInfo:String, type: Class<T>, genericType: Type):T {
+        val bodyJson = bodyProvider.provideBodyString(objectInfo)
+        return bodyProvider.provideBodyObjectFromString(type, genericType, bodyJson)
     }
 
     private fun setHeaders(servletResponse: HttpServletResponse, headers: List<YamlMethodStub.Header>) {
