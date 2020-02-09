@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.yaml
+package ua.kurinnyi.jaxrs.auto.mock.serializable
 
 import org.apache.commons.io.IOUtils
 import java.nio.file.FileSystems
@@ -8,10 +8,10 @@ import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.streams.toList
 
-object ResourceFolderYamlFilesLoader : YamlFilesLoader {
+class ResourceFolderSerializableFilesLoader(private val filesExtension: String) : SerializableFilesLoader {
 
-    override fun reloadYamlFilesAsStrings(): List<String> =
-            getFolderPath()?.let(::readAllYamlFilesContentInFolder) ?: emptyList()
+    override fun reloadFilesAsStrings(): List<String> =
+            getFolderPath()?.let(::readAllFilesContentInFolder) ?: emptyList()
 
     private fun getFolderPath(): Path? {
         val resource = javaClass.classLoader.getResource("stubs/") ?: return null
@@ -25,11 +25,10 @@ object ResourceFolderYamlFilesLoader : YamlFilesLoader {
         }
     }
 
-    private fun readAllYamlFilesContentInFolder(it: Path) =
-            Files.walk(it).use { files -> readAllYamlFilesContent(files) }
+    private fun readAllFilesContentInFolder(it: Path) = Files.walk(it).use { files -> readAllFilesContent(files) }
 
-    private fun readAllYamlFilesContent(files: Stream<Path>): List<String> =
-            files.filter { it.toString().toLowerCase().endsWith(".yaml") }
+    private fun readAllFilesContent(files: Stream<Path>): List<String> =
+            files.filter { it.toString().toLowerCase().endsWith(filesExtension) }
                     .map { IOUtils.toString(Files.newBufferedReader(it)) }
                     .toList()
 }

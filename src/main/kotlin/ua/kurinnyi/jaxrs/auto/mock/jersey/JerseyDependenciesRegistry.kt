@@ -20,14 +20,13 @@ import ua.kurinnyi.jaxrs.auto.mock.recorder.ConsoleRecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.recorder.RecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import ua.kurinnyi.jaxrs.auto.mock.recorder.ResponseDecoder
-import ua.kurinnyi.jaxrs.auto.mock.yaml.ResourceFolderYamlFilesLoader
-import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlFilesLoader
+import ua.kurinnyi.jaxrs.auto.mock.serializable.*
 
 object JerseyDependenciesRegistry : DependenciesRegistry {
 
     override fun recorder() = recorder
     override fun groupSwitchService() = commonDependencies.groupSwitchService
-    override fun serialisationUtils():SerialisationUtils = SERIALISATION_UTILS
+    override fun serialisationUtils():SerialisationUtils = serialisationUtils
     override fun requestProxy():RequestProxy = requestProxy
     override fun contextSaveFilter():ContextSaveFilter = contextSaveFilter
     override fun bodyProvider():BodyProvider = defaultBodyProvider
@@ -42,22 +41,26 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
     private val contextSaveFilter = ContextSaveFilter()
     private val requestProxy = RequestProxy(contextSaveFilter)
     private val platformUtils = JerseyPlatformUtils()
+    private val yamlObjectMapper = YamlObjectMapper()
 
     var recordSaver: RecordSaver = ConsoleRecordSaver()
     var responseDecoders: List<ResponseDecoder> = listOf()
     var proxyConfiguration: ProxyConfiguration = NothingMatchedProxyConfiguration()
-    var yamlFilesLoader: YamlFilesLoader = ResourceFolderYamlFilesLoader
+    var serializableFilesLoader: SerializableFilesLoader = ResourceFolderSerializableFilesLoader(".yaml")
     var stubDefinitions: List<StubsDefinition> = emptyList()
     var defaultBodyProvider: BodyProvider = FileBodyProvider(jacksonBodyProvider)
 
     private val recorder: Recorder by lazy {
-        Recorder(responseDecoders, recordSaver, contextSaveFilter, responseIntersectingFilter, platformUtils)
+        Recorder(responseDecoders, recordSaver, contextSaveFilter, responseIntersectingFilter, platformUtils, yamlObjectMapper)
     }
     private val commonDependencies: CommonDependencies by lazy {
         CommonDependencies(proxyConfiguration, stubDefinitions, this)
     }
-    private val SERIALISATION_UTILS: SerialisationUtils by lazy {
+    private val serialisationUtils: SerialisationUtils by lazy {
         SerialisationUtils(defaultBodyProvider, TemplateEngine())
+    }
+    val serializableStubsDefinitionLoader: SerializableStubsDefinitionLoader by lazy {
+        SerializableStubsDefinitionLoader(serializableFilesLoader, yamlObjectMapper, SerializableToMethodStubConverter())
     }
 
     data class CommonDependencies(val proxyConfiguration: ProxyConfiguration,

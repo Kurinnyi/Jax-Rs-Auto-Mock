@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.yaml
+package ua.kurinnyi.jaxrs.auto.mock.serializable
 
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupCallback
@@ -6,7 +6,11 @@ import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubDefinitionData
 
 
-class YamlStubsDefinitionsLoader(private val filesLoader: YamlFilesLoader) : StubsDefinition {
+class SerializableStubsDefinitionLoader(
+        private val filesLoader: SerializableFilesLoader,
+        private val serializableObjectMapper: SerializableObjectMapper,
+        private val serializableToMethodStubConverter: SerializableToMethodStubConverter
+) : StubsDefinition {
 
     override fun getPriority(): Int = 1
     override fun isRealTime(): Boolean = true
@@ -17,8 +21,8 @@ class YamlStubsDefinitionsLoader(private val filesLoader: YamlFilesLoader) : Stu
     }
 
     private fun getMethodStubResponses(): List<ResourceMethodStub> =
-            filesLoader.reloadYamlFilesAsStrings()
-                    .map { YamlObjectMapper.read<MethodStubsHolder>(it).stubs }
+            filesLoader.reloadFilesAsStrings()
+                    .map { serializableObjectMapper.read(it, MethodStubsHolder::class.java).stubs }
                     .flatten()
-                    .flatMap { it.toFlatStubs() }
+                    .flatMap { serializableToMethodStubConverter.toMethodStubs(it) }
 }

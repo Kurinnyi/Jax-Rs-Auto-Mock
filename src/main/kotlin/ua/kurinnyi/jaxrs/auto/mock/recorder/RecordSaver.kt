@@ -1,12 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.recorder
 
-import ua.kurinnyi.jaxrs.auto.mock.yaml.MethodStubsHolder
-import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlObjectMapper
+import ua.kurinnyi.jaxrs.auto.mock.serializable.MethodStubsHolder
+import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableObjectMapper
 
 interface RecordSaver {
-    fun saveRecords(stubs: MethodStubsHolder)
-
-    fun toYamlString(stubs:MethodStubsHolder):String =
-        YamlObjectMapper.toString(stubs)
-
+    fun saveRecords(stubs: MethodStubsHolder, objectMapper: SerializableObjectMapper)
 }

@@ -17,9 +17,7 @@ import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
 import ua.kurinnyi.jaxrs.auto.mock.recorder.RecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.recorder.ResponseDecoder
-import ua.kurinnyi.jaxrs.auto.mock.yaml.ResponseFromStubCreator
-import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlFilesLoader
-import ua.kurinnyi.jaxrs.auto.mock.yaml.YamlStubsDefinitionsLoader
+import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableFilesLoader
 import java.io.File
 import javax.servlet.Filter
 import kotlin.reflect.KClass
@@ -84,8 +82,8 @@ class StubServer {
         JerseyDependenciesRegistry.recordSaver = saver
     }
 
-    fun setYamlFilesLoader(loader:YamlFilesLoader): StubServer = this.apply {
-        JerseyDependenciesRegistry.yamlFilesLoader = loader
+    fun setYamlFilesLoader(loader:SerializableFilesLoader): StubServer = this.apply {
+        JerseyDependenciesRegistry.serializableFilesLoader = loader
     }
 
     fun addHttpResponseDecoder(decoder:ResponseDecoder): StubServer = this.also {
@@ -100,9 +98,8 @@ class StubServer {
         val tomcat = Tomcat()
         tomcat.setPort(port)
         addStubDefinition(GroupResourceImpl())
-        addStubDefinition(YamlStubsDefinitionsLoader(JerseyDependenciesRegistry.yamlFilesLoader))
+        addStubDefinition(JerseyDependenciesRegistry.serializableStubsDefinitionLoader)
         JerseyDependenciesRegistry.stubDefinitions = getStubDefinitions()
-        ResponseFromStubCreator.useJerseyDeserialization = useJerseyDeserialization
         enabledByDefaultGroups.forEach{ JerseyDependenciesRegistry.groupSwitchService().switchGroupStatus(it, GroupStatus.ACTIVE) }
         getResourceInterfacesToContextMapping(ignoredResources).forEach { contextPath, interfaces ->
             addContext(tomcat, interfaces, contextPath)
