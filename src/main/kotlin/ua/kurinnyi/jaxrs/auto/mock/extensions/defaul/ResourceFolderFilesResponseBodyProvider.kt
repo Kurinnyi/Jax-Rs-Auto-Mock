@@ -1,10 +1,11 @@
-package ua.kurinnyi.jaxrs.auto.mock.body
+package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
 import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.MockNotFoundException
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
 import java.lang.reflect.Type
 
-class FromFileResponseBodyProvider(private val responseBodyProvider: ResponseBodyProvider): ResponseBodyProvider {
+class ResourceFolderFilesResponseBodyProvider(private val responseBodyProvider: ResponseBodyProvider): ResponseBodyProvider {
     override fun <T> provideBodyObjectFromString(type: Class<T>, genericType: Type, bodyString: String):T =
         responseBodyProvider.provideBodyObjectFromString(type, genericType, bodyString)
 

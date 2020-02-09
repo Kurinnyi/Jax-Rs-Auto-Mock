@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.body
+package ua.kurinnyi.jaxrs.auto.mock.extensions
 
 import java.lang.reflect.Type
 

@@ -1,5 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock.serializable
 
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerialisedMocksFilesLoader
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerializableObjectMapper
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupCallback
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.MethodMock

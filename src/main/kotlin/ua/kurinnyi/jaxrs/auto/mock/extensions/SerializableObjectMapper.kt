@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.serializable
+package ua.kurinnyi.jaxrs.auto.mock.extensions
 
 interface SerializableObjectMapper {
 

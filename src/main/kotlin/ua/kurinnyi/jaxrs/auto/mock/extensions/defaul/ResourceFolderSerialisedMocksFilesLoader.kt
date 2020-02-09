@@ -1,6 +1,7 @@
-package ua.kurinnyi.jaxrs.auto.mock.serializable
+package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
 import org.apache.commons.io.IOUtils
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerialisedMocksFilesLoader
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path

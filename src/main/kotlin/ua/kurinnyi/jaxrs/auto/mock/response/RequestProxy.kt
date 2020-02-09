@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.httpproxy
+package ua.kurinnyi.jaxrs.auto.mock.response
 
 import org.apache.commons.io.IOUtils
 import org.apache.http.client.methods.*

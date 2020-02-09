@@ -1,9 +1,9 @@
 package ua.kurinnyi.jaxrs.auto.mock.apiv1
 
 import ua.kurinnyi.jaxrs.auto.mock.Utils
-import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.FromFileResponseBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.JacksonResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.extensions.defaul.ResourceFolderFilesResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.extensions.defaul.JacksonResponseBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyInternalResponseBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.ApiAdapterForResponseGeneration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
@@ -300,4 +300,4 @@ private fun <T>getReturnValue(method: Method): T? {
 }
 typealias BY_JACKSON = JacksonResponseBodyProvider
 typealias BY_JERSEY = JerseyInternalResponseBodyProvider
-typealias FROM_FILE = FromFileResponseBodyProvider
+typealias FROM_FILE = ResourceFolderFilesResponseBodyProvider

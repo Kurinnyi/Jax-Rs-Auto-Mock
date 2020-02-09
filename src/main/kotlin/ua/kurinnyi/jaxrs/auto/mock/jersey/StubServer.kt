@@ -8,16 +8,18 @@ import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import org.reflections.Reflections
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
-import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ContextPathsConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.extensions.defaul.ByPackageContextPathConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingFilter
-import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.jersey.groups.GroupConfigurationResourceImpl
 import ua.kurinnyi.jaxrs.auto.mock.mocks.AutoDiscoveryOfStubDefinitions
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
-import ua.kurinnyi.jaxrs.auto.mock.recorder.HttpResponseDecoder
-import ua.kurinnyi.jaxrs.auto.mock.recorder.RecordSaver
-import ua.kurinnyi.jaxrs.auto.mock.serializable.SerialisedMocksFilesLoader
+import ua.kurinnyi.jaxrs.auto.mock.extensions.HttpResponseDecoder
+import ua.kurinnyi.jaxrs.auto.mock.extensions.RecordSaver
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerialisedMocksFilesLoader
 import java.io.File
 import javax.servlet.Filter
 import kotlin.reflect.KClass
@@ -26,13 +28,15 @@ import kotlin.reflect.KClass
 class StubServer {
 
     private val reflections = Reflections()
+    private var contextPathsConfiguration:ContextPathsConfiguration = ByPackageContextPathConfiguration(emptyList())
 
+    private val defaultContextPath = "/"
     private var port = 8080
     private val packagesToScan = mutableListOf<String>()
     private val classesToRegister = mutableSetOf<Class<*>>()
     private val stubDefinitions = mutableListOf<StubsDefinition>()
     private var autoDiscoveryOfStubDefinitions = true
-    private val ignoredResources = mutableSetOf<KClass<*>>()
+    private val ignoredResources = mutableSetOf<Class<*>>()
     private val enabledByDefaultGroups = mutableListOf<String>()
 
     fun onPort(port: Int): StubServer = this.apply {
@@ -56,6 +60,10 @@ class StubServer {
     }
 
     fun addIgnoreResource(ignoredResource: KClass<*>): StubServer = this.apply {
+        ignoredResources + ignoredResource.java
+    }
+
+    fun addIgnoreResource(ignoredResource: Class<*>): StubServer = this.apply {
         ignoredResources + ignoredResource
     }
 
@@ -65,6 +73,10 @@ class StubServer {
 
     fun withDisabledAutoDiscoveryOfStubDefinition(): StubServer = this.apply {
         autoDiscoveryOfStubDefinitions = false
+    }
+
+    fun withContextPathConfiguration(contextPathsConfiguration: ContextPathsConfiguration): StubServer = this.apply {
+        this.contextPathsConfiguration = contextPathsConfiguration
     }
 
     fun withProxyConfiguration(proxyConfiguration: ProxyConfiguration): StubServer = this.also {
@@ -122,8 +134,9 @@ class StubServer {
         resourceLoader.registerInstances(proxyInstances.toSet())
     }
 
-    private fun getResourceInterfacesToContextMapping(ignoredResources: Set<KClass<*>>): Map<String, List<Class<*>>> {
-        return AutoDiscoveryOfResourceInterfaces(reflections, ignoredResources).getResourceInterfacesToContextMapping()
+    private fun getResourceInterfacesToContextMapping(ignoredResources: Set<Class<*>>): Map<String, List<Class<*>>> {
+        return AutoDiscoveryOfResourceInterfaces(reflections, ignoredResources).getInterfacesToMock()
+                .groupBy { clazz -> contextPathsConfiguration.getContextPathsForResource(clazz) ?: defaultContextPath }
     }
 
     private fun addJerseyServlet(resourceLoader: ResourceConfig, context: Context) {

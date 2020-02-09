@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.recorder
+package ua.kurinnyi.jaxrs.auto.mock.extensions
 
 interface HttpResponseDecoder {
 

@@ -1,8 +1,9 @@
-package ua.kurinnyi.jaxrs.auto.mock.serializable
+package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerializableObjectMapper
 
 class YamlObjectMapper : SerializableObjectMapper {
     private val yamlObjectMapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())

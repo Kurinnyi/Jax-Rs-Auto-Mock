@@ -1,7 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
-import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
-import ua.kurinnyi.jaxrs.auto.mock.httpproxy.RequestProxy
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.response.RequestProxy
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubDefinitionsExecutor
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.MethodMock
 import java.lang.reflect.InvocationHandler

@@ -2,8 +2,8 @@ package ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl
 
 import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
-import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.response.Recorder
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse
 
@@ -15,7 +15,7 @@ class ApiAdapterForResponseGeneration(
 
     var shouldFlush = false
 
-    fun <T> getObjectFromString(responseBodyProvider:ResponseBodyProvider, stringInfo:String, templateArgs: Map<String, Any>): T {
+    fun <T> getObjectFromString(responseBodyProvider: ResponseBodyProvider, stringInfo:String, templateArgs: Map<String, Any>): T {
         return dependenciesRegistry.serialisationUtils()
                 .getObjectFromString(responseBodyProvider, stringInfo, templateArgs, method.returnType, method.genericReturnType) as T
     }

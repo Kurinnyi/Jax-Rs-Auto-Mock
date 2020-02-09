@@ -1,7 +1,8 @@
-package ua.kurinnyi.jaxrs.auto.mock.recorder
+package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
+import ua.kurinnyi.jaxrs.auto.mock.extensions.RecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableMocksHolder
-import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableObjectMapper
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerializableObjectMapper
 
 class ConsoleRecordSaver : RecordSaver {
     override fun saveRecords(mocks: SerializableMocksHolder, objectMapper: SerializableObjectMapper) {

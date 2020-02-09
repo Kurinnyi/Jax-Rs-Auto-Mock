@@ -1,6 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.jersey
 
-import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
 import java.lang.reflect.Type
 
 class JerseyInternalResponseBodyProvider(private val jerseyInternalsFilter: JerseyInternalsFilter): ResponseBodyProvider {

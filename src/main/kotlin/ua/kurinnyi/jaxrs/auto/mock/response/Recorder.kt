@@ -1,13 +1,15 @@
-package ua.kurinnyi.jaxrs.auto.mock.recorder
+package ua.kurinnyi.jaxrs.auto.mock.response
 
 import ua.kurinnyi.jaxrs.auto.mock.PlatformUtils
 import ua.kurinnyi.jaxrs.auto.mock.Utils.bodyAsString
+import ua.kurinnyi.jaxrs.auto.mock.extensions.HttpResponseDecoder
+import ua.kurinnyi.jaxrs.auto.mock.extensions.RecordSaver
 import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingResponseWrapper
 import ua.kurinnyi.jaxrs.auto.mock.filters.HttpRequestResponseHolder
 import ua.kurinnyi.jaxrs.auto.mock.filters.ResponseIntersectingFilter
 import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableMocksHolder
 import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableMethodMock
-import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableObjectMapper
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerializableObjectMapper
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 
@@ -28,8 +30,8 @@ class Recorder(
         val methodParams = (paramValues ?: emptyArray()).zip(method.parameters)
                 .map { (argValue, methodParam) ->
                     when {
-                        platformUtils.isHttpBody(methodParam) -> Recorder.MethodParam(Recorder.ParamProcessingWay.BODY, null)
-                        else -> Recorder.MethodParam(Recorder.ParamProcessingWay.PARAM, argValue.toString())
+                        platformUtils.isHttpBody(methodParam) -> MethodParam(ParamProcessingWay.BODY, null)
+                        else -> MethodParam(ParamProcessingWay.PARAM, argValue.toString())
                     }
                 }
         write(method, methodParams)

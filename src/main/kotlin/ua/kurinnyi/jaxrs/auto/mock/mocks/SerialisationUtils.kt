@@ -1,28 +1,28 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl
-import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.TemplateEngine
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.response.TemplateEngine
 import java.lang.reflect.Type
 
 class SerialisationUtils(
         val defaultResponseBodyProvider: ResponseBodyProvider,
         private val templateEngine: TemplateEngine) {
 
-    inline fun <reified T> load(responseBodyProvider:ResponseBodyProvider, objectInfo:String, vararg templateArgs: Pair<String, Any>): T {
+    inline fun <reified T> load(responseBodyProvider: ResponseBodyProvider, objectInfo:String, vararg templateArgs: Pair<String, Any>): T {
         return getObjectFromString(responseBodyProvider, objectInfo, templateArgs.toMap(), T::class.java, T::class.java)
     }
     inline fun <reified T> load(objectInfo:String, vararg templateArgs: Pair<String, Any>): T {
         return getObjectFromString(objectInfo, templateArgs.toMap(), T::class.java, T::class.java)
     }
-    inline fun <reified T> loadList(responseBodyProvider:ResponseBodyProvider, objectInfo:String, vararg templateArgs: Pair<String, Any>): List<T> {
+    inline fun <reified T> loadList(responseBodyProvider: ResponseBodyProvider, objectInfo:String, vararg templateArgs: Pair<String, Any>): List<T> {
         return getObjectFromString(responseBodyProvider, objectInfo, templateArgs.toMap(), List::class.java, _listType<T>()) as List<T>
     }
 
     inline fun <reified T> loadList(objectInfo:String, vararg templateArgs: Pair<String, Any>): List<T> {
         return getObjectFromString(objectInfo, templateArgs.toMap(), List::class.java, _listType<T>()) as List<T>
     }
-    inline fun <reified KEY, reified VALUE> loadMap(responseBodyProvider:ResponseBodyProvider, objectInfo:String, vararg templateArgs: Pair<String, Any>): Map<KEY, VALUE> {
+    inline fun <reified KEY, reified VALUE> loadMap(responseBodyProvider: ResponseBodyProvider, objectInfo:String, vararg templateArgs: Pair<String, Any>): Map<KEY, VALUE> {
         return getObjectFromString(responseBodyProvider, objectInfo, templateArgs.toMap(), Map::class.java, _mapType<KEY, VALUE>()) as Map<KEY, VALUE>
     }
 

@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.httpproxy
+package ua.kurinnyi.jaxrs.auto.mock.extensions
 
 interface ProxyConfiguration {
 

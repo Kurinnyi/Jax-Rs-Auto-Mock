@@ -1,6 +1,7 @@
-package ua.kurinnyi.jaxrs.auto.mock.body
+package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
 import java.lang.reflect.Type
 
 class JacksonResponseBodyProvider: ResponseBodyProvider {

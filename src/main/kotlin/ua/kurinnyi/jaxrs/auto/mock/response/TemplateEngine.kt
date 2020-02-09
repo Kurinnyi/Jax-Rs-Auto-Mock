@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.body
+package ua.kurinnyi.jaxrs.auto.mock.response
 
 import com.mitchellbosecke.pebble.PebbleEngine
 import com.mitchellbosecke.pebble.loader.StringLoader

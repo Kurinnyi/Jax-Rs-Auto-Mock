@@ -1,6 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
-import ua.kurinnyi.jaxrs.auto.mock.httpproxy.ProxyConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

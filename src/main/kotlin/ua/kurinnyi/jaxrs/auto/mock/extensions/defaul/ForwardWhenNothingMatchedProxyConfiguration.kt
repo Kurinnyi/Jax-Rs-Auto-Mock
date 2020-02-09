@@ -1,4 +1,6 @@
-package ua.kurinnyi.jaxrs.auto.mock.httpproxy
+package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
+
+import ua.kurinnyi.jaxrs.auto.mock.extensions.ProxyConfiguration
 
 open class ForwardWhenNothingMatchedProxyConfiguration : ProxyConfiguration {
     private val classesToBeProxied:MutableMap<String, String> = hashMapOf()
