@@ -8,18 +8,13 @@ import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import org.reflections.Reflections
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
-import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.extensions.ContextPathsConfiguration
+import ua.kurinnyi.jaxrs.auto.mock.extensions.*
 import ua.kurinnyi.jaxrs.auto.mock.extensions.defaul.ByPackageContextPathConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.filters.BufferingFilter
-import ua.kurinnyi.jaxrs.auto.mock.extensions.ProxyConfiguration
 import ua.kurinnyi.jaxrs.auto.mock.jersey.groups.GroupConfigurationResourceImpl
 import ua.kurinnyi.jaxrs.auto.mock.mocks.AutoDiscoveryOfStubDefinitions
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
-import ua.kurinnyi.jaxrs.auto.mock.extensions.HttpResponseDecoder
-import ua.kurinnyi.jaxrs.auto.mock.extensions.RecordSaver
-import ua.kurinnyi.jaxrs.auto.mock.extensions.SerialisedMocksFilesLoader
 import java.io.File
 import javax.servlet.Filter
 import kotlin.reflect.KClass
@@ -38,33 +33,34 @@ class StubServer {
     private var autoDiscoveryOfStubDefinitions = true
     private val ignoredResources = mutableSetOf<Class<*>>()
     private val enabledByDefaultGroups = mutableListOf<String>()
+    private var dependencyRegistryReadyCallback: (DependenciesRegistry) -> Unit = {}
 
     fun onPort(port: Int): StubServer = this.apply {
         this.port = port
     }
 
     fun addPackageToScanForProviders(packageName: String): StubServer = this.apply {
-        packagesToScan + packageName
+        packagesToScan.add(packageName)
     }
 
     fun addProviderClassToRegister(clazz: Class<*>): StubServer = this.apply {
-        classesToRegister + clazz
+        classesToRegister.add(clazz)
     }
 
     fun addStubDefinition(stubDefinition: StubsDefinition): StubServer = this.apply {
-        stubDefinitions + stubDefinition
+        stubDefinitions.add(stubDefinition)
     }
 
-    fun addEnabledOnStartGroup(groupName: String): StubServer = this.apply {
-        enabledByDefaultGroups + groupName
+    fun addGroupToEnableOnStart(groupName: String): StubServer = this.apply {
+        enabledByDefaultGroups.add(groupName)
     }
 
-    fun addIgnoreResource(ignoredResource: KClass<*>): StubServer = this.apply {
-        ignoredResources + ignoredResource.java
+    fun addResourceToIgnore(ignoredResource: KClass<*>): StubServer = this.apply {
+        ignoredResources.add(ignoredResource.java)
     }
 
-    fun addIgnoreResource(ignoredResource: Class<*>): StubServer = this.apply {
-        ignoredResources + ignoredResource
+    fun addResourceToIgnore(ignoredResource: Class<*>): StubServer = this.apply {
+        ignoredResources.add(ignoredResource)
     }
 
     fun addHttpResponseDecoder(decoderHttp: HttpResponseDecoder): StubServer = this.also {
@@ -95,8 +91,8 @@ class StubServer {
         JerseyDependenciesRegistry.serialisedMocksFilesLoader = filesLoader
     }
 
-    fun getDependenciesRegistry(): DependenciesRegistry {
-        return JerseyDependenciesRegistry
+    fun onDependenciesRegistryReady(callback: (DependenciesRegistry) -> Unit): StubServer = this.apply {
+       dependencyRegistryReadyCallback = callback
     }
 
     fun start() {
@@ -109,6 +105,7 @@ class StubServer {
         getResourceInterfacesToContextMapping(ignoredResources).forEach { contextPath, interfaces ->
             addContext(tomcat, interfaces, contextPath)
         }
+        dependencyRegistryReadyCallback(JerseyDependenciesRegistry)
         tomcat.start()
         tomcat.server.await()
     }
