@@ -1,6 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.httpproxy
 
-open class NothingMatchedProxyConfiguration : ProxyConfiguration {
+open class ForwardWhenNothingMatchedProxyConfiguration : ProxyConfiguration {
     private val classesToBeProxied:MutableMap<String, String> = hashMapOf()
     private val classesToBeRecorded:MutableSet<String> = mutableSetOf()
 
@@ -13,8 +13,8 @@ open class NothingMatchedProxyConfiguration : ProxyConfiguration {
         classesToBeRecorded.add(clazzName)
     }
 
-    override fun shouldClassBeProxied(clazzName: String, stubDefinitionIsFound: Boolean) : Boolean  =
-            !stubDefinitionIsFound && classesToBeProxied.containsKey(clazzName)
+    override fun shouldClassBeProxied(clazzName: String, mockIsFound: Boolean) : Boolean  =
+            !mockIsFound && classesToBeProxied.containsKey(clazzName)
 
     override fun getProxyUrl(clazzName: String) : String =
             classesToBeProxied[clazzName]?:throw IllegalArgumentException("Class $clazzName is not configured to be proxied")

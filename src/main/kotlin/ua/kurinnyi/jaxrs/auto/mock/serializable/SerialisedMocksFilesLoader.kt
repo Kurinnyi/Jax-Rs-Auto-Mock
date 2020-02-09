@@ -1,5 +1,5 @@
 package ua.kurinnyi.jaxrs.auto.mock.serializable
 
-interface SerializableFilesLoader {
+interface SerialisedMocksFilesLoader {
     fun reloadFilesAsStrings():List<String>
 }

@@ -1,22 +1,22 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
-import ua.kurinnyi.jaxrs.auto.mock.mocks.MethodStubsLoader
+import ua.kurinnyi.jaxrs.auto.mock.mocks.StubDefinitionsExecutor
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubsGroup
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.Group
 
-class GroupSwitchService(private val loader: MethodStubsLoader) {
+class GroupSwitchService(private val loader: StubDefinitionsExecutor) {
 
     fun switchGroupStatus(groupName:String, status: GroupStatus){
-        val stubsGroup = loader.getGroups().find { it.name() == groupName }
+        val mockGroup = loader.getGroups().find { it.name() == groupName }
         val groupCallbacks = loader.getGroupsCallbacks().filter { it.groupName == groupName }
-        stubsGroup ?: println("Group with name ${groupName} not found")
+        mockGroup ?: println("Group with name ${groupName} not found")
         when (status) {
             GroupStatus.ACTIVE -> {
-                stubsGroup?.activate()
+                mockGroup?.activate()
                 groupCallbacks.forEach{it.onGroupEnabled()}
             }
             GroupStatus.NON_ACTIVE -> {
-                stubsGroup?.deactivate()
+                mockGroup?.deactivate()
                 groupCallbacks.forEach{it.onGroupDisabled()}
             }
             GroupStatus.PARTIALLY_ACTIVE ->
@@ -24,7 +24,7 @@ class GroupSwitchService(private val loader: MethodStubsLoader) {
         }
     }
 
-    fun getAllGroups(): List<StubsGroup> {
+    fun getAllGroups(): List<Group> {
         return loader.getGroups()
     }
 }

@@ -8,17 +8,17 @@ import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.streams.toList
 
-class ResourceFolderSerializableFilesLoader(private val filesExtension: String) : SerializableFilesLoader {
+class ResourceFolderSerialisedMocksFilesLoader(private val filesExtension: String) : SerialisedMocksFilesLoader {
 
     override fun reloadFilesAsStrings(): List<String> =
             getFolderPath()?.let(::readAllFilesContentInFolder) ?: emptyList()
 
     private fun getFolderPath(): Path? {
-        val resource = javaClass.classLoader.getResource("stubs/") ?: return null
+        val resource = javaClass.classLoader.getResource("mocks/") ?: return null
         val uri = resource.toURI()
         return if ("jar" == uri.scheme) {
             FileSystems.newFileSystem(uri, emptyMap<String, Any>(), null).use {
-                it.getPath("stubs/")
+                it.getPath("mocks/")
             }
         } else {
             Paths.get(uri)

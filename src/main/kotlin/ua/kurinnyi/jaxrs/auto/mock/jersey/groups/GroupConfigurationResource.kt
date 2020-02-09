@@ -6,7 +6,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 
 @Path("group")
-interface GroupResource {
+interface GroupConfigurationResource {
 
     @GET
     @Path("/")

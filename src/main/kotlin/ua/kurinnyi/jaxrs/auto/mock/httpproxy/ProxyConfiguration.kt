@@ -6,7 +6,7 @@ interface ProxyConfiguration {
 
     fun addClassForRecord(clazzName: String)
 
-    fun shouldClassBeProxied(clazzName: String, stubDefinitionIsFound: Boolean) : Boolean
+    fun shouldClassBeProxied(clazzName: String, mockIsFound: Boolean) : Boolean
 
     fun getProxyUrl(clazzName: String) : String
 

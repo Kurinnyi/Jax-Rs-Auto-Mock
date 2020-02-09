@@ -1,12 +1,12 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupCallback
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.StubDefinitionData
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.CompleteMocksData
 
 interface StubsDefinition {
-    fun getStubs(): StubDefinitionData = StubDefinitionData()
+    fun getStubs(): CompleteMocksData = CompleteMocksData()
     fun getPriority(): Int = 0
     fun getGroupsCallbacks(): List<GroupCallback> = emptyList()
-    fun isRealTime(): Boolean = false
+    fun isHotReloadable(): Boolean = false
 }
 

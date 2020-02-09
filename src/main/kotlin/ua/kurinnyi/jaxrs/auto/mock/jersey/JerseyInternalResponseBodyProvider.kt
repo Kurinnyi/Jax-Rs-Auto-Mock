@@ -1,9 +1,9 @@
 package ua.kurinnyi.jaxrs.auto.mock.jersey
 
-import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
 import java.lang.reflect.Type
 
-class JerseyInternalBodyProvider(private val jerseyInternalsFilter: JerseyInternalsFilter): BodyProvider {
+class JerseyInternalResponseBodyProvider(private val jerseyInternalsFilter: JerseyInternalsFilter): ResponseBodyProvider {
     override fun <T> provideBodyObjectFromString(type: Class<T>, genericType: Type, bodyString: String) =
             jerseyInternalsFilter.prepareResponse(type, genericType, bodyString)
 

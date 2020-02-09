@@ -1,8 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.serializable
 
-data class MethodStubsHolder(val stubs: List<SerializableMethodStub>)
+data class SerializableMocksHolder(val stubs: List<SerializableMethodMock>)
 
-data class SerializableMethodStub(val className: String, val methodName: String, val cases: List<Case>) {
+data class SerializableMethodMock(val className: String, val methodName: String, val cases: List<Case>) {
     data class RequestParameter(val matchType: MatchType, val value: String?) {
         enum class MatchType {
             EXACT, TEMPLATE, BODY_TEMPLATE, BODY, IS_NULL, NOT_NULL, ANY;

@@ -3,7 +3,7 @@ package ua.kurinnyi.jaxrs.auto.mock.body
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.lang.reflect.Type
 
-class JacksonBodyProvider: BodyProvider {
+class JacksonResponseBodyProvider: ResponseBodyProvider {
     private val objectMapper = ObjectMapper()
 
     override fun <T> provideBodyObjectFromString(type: Class<T>, genericType: Type, bodyString: String):T =

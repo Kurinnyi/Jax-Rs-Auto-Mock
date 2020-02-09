@@ -15,14 +15,14 @@ class AutoDiscoveryOfResourceInterfaces(private val reflections: Reflections, pr
 
     fun getResourceInterfacesToContextMapping(): Map<String, List<Class<*>>> {
         val contextPathsConfig: Map<String, String> = loadContextPathsConfig()
-        return getInterfacesToStub().groupBy { i ->
+        return getInterfacesToMock().groupBy { i ->
             contextPathsConfig.entries.find { (key, _) ->
                 i.name.startsWith(key)
             }?.value ?: defaultContextPath
         }
     }
 
-    private fun getInterfacesToStub(): List<Class<*>> {
+    private fun getInterfacesToMock(): List<Class<*>> {
         val ignoredResourcesJava = ignoredResources.map { it.java }
         return reflections.getTypesAnnotatedWith(Path::class.java)
                 .filter { it.isInterface }

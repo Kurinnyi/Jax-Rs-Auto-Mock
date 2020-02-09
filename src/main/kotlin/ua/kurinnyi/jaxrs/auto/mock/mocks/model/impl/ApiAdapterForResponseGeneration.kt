@@ -2,7 +2,7 @@ package ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl
 
 import org.apache.commons.io.IOUtils
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
-import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.recorder.Recorder
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletResponse
@@ -10,14 +10,14 @@ import javax.servlet.http.HttpServletResponse
 class ApiAdapterForResponseGeneration(
         val method: Method,
         private val response: HttpServletResponse,
-        private val methodInvocationValues: Array<Any?>,
+        private val methodInvocationParameters: Array<Any?>,
         private val dependenciesRegistry: DependenciesRegistry) {
 
     var shouldFlush = false
 
-    fun <T> getObjectFromString(bodyProvider:BodyProvider, stringInfo:String, templateArgs: Map<String, Any>): T {
+    fun <T> getObjectFromString(responseBodyProvider:ResponseBodyProvider, stringInfo:String, templateArgs: Map<String, Any>): T {
         return dependenciesRegistry.serialisationUtils()
-                .getObjectFromString(bodyProvider, stringInfo, templateArgs, method.returnType, method.genericReturnType) as T
+                .getObjectFromString(responseBodyProvider, stringInfo, templateArgs, method.returnType, method.genericReturnType) as T
     }
 
     fun <T> getObjectFromString(objectInfo:String, templateArgs: Map<String, Any>): T {
@@ -39,7 +39,7 @@ class ApiAdapterForResponseGeneration(
         dependenciesRegistry.requestProxy().forwardRequest(path)
     }
 
-    fun recordResponse(argumentMatchers: List<MethodStub.ArgumentMatcher>) {
+    fun recordResponse(argumentMatchers: List<ExecutableMethodMock.ArgumentMatcher>) {
         dependenciesRegistry.recorder().write(method, getParamsConfigForRecorder(argumentMatchers))
     }
 
@@ -47,10 +47,10 @@ class ApiAdapterForResponseGeneration(
         response.addHeader(headerName, headerValue)
     }
 
-    private fun getParamsConfigForRecorder(argumentMatchers: List<MethodStub.ArgumentMatcher>):List<Recorder.MethodParam>{
-        return methodInvocationValues.zip(argumentMatchers).mapIndexed { i, (argValue, argMatcher) ->
+    private fun getParamsConfigForRecorder(argumentMatchers: List<ExecutableMethodMock.ArgumentMatcher>):List<Recorder.MethodParam>{
+        return methodInvocationParameters.zip(argumentMatchers).mapIndexed { i, (argValue, argMatcher) ->
             when {
-                argMatcher.matchType == MethodStub.MatchType.IGNORE_IN_RECORD ->
+                argMatcher.matchType == ExecutableMethodMock.MatchType.IGNORE_IN_RECORD ->
                     Recorder.MethodParam(Recorder.ParamProcessingWay.IGNORE, null)
                 dependenciesRegistry.platformUtils().isHttpBody(method.parameters[i]) ->
                     Recorder.MethodParam(Recorder.ParamProcessingWay.BODY, null)

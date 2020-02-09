@@ -1,14 +1,14 @@
 package ua.kurinnyi.jaxrs.auto.mock.apiv1
 
 import ua.kurinnyi.jaxrs.auto.mock.Utils
-import ua.kurinnyi.jaxrs.auto.mock.body.BodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.FileBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.body.JacksonBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyInternalBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.ResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.FromFileResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.body.JacksonResponseBodyProvider
+import ua.kurinnyi.jaxrs.auto.mock.jersey.JerseyInternalResponseBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.ApiAdapterForResponseGeneration
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.*
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.GroupOfMethodStubs
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.MethodStub
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.GroupOfMethodMocks
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl.ExecutableMethodMock
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
@@ -18,11 +18,11 @@ class StubDefinitionContext {
     internal val stubs: MutableList<MethodStubBuilder> = mutableListOf()
     private val allGroups: MutableList<GroupBuilder> = mutableListOf()
     internal var activeGroups: List<GroupBuilder> = listOf()
-    internal var proxyConfig: CommonProxyConfig = CommonProxyConfig(emptyMap(), emptyList())
+    internal var proxyConfig: ProxyConfig = ProxyConfig(emptyMap(), emptyList())
 
-    fun createStubs(definitions: StubDefinitionContext.() -> Unit): StubDefinitionData {
+    fun createStubs(definitions: StubDefinitionContext.() -> Unit): CompleteMocksData {
         definitions(this)
-        return StubDefinitionData(stubs.map { it.methodStub }, allGroups.map { it.group }, proxyConfig)
+        return CompleteMocksData(stubs.map { it.executableMethodMock }, allGroups.map { it.group }, proxyConfig)
     }
 
     fun <RESOURCE : Any> forClass(clazz: KClass<RESOURCE>, definitions: ClazzStubDefinitionContext<RESOURCE>.() -> Unit) {
@@ -41,7 +41,7 @@ class StubDefinitionContext {
 }
 
 class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, private val context: StubDefinitionContext) {
-    private var tempArgList: List<MethodStub.ArgumentMatcher> = listOf()
+    private var tempArgList: List<ExecutableMethodMock.ArgumentMatcher> = listOf()
     private var methodStubs: List<MethodStubBuilder> = listOf()
 
     fun bypassAnyNotMatched(path: String) {
@@ -107,13 +107,13 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
     fun <ARGUMENT> anyInRecord(): ARGUMENT {
         val castedPredicate = { arg: Any? -> true }
-        tempArgList + MethodStub.ArgumentMatcher(MethodStub.MatchType.IGNORE_IN_RECORD, castedPredicate)
+        tempArgList + ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.IGNORE_IN_RECORD, castedPredicate)
         return null as ARGUMENT
     }
 
     fun <ARGUMENT> matchNullable(predicate: (ARGUMENT?) -> Boolean): ARGUMENT {
         val castedPredicate = { arg: Any? -> predicate(arg as ARGUMENT) }
-        tempArgList + MethodStub.ArgumentMatcher(MethodStub.MatchType.MATCH, castedPredicate)
+        tempArgList + ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.MATCH, castedPredicate)
         return null as ARGUMENT
     }
 
@@ -151,7 +151,7 @@ class ClazzStubDefinitionContext<RESOURCE>(private val clazz: Class<RESOURCE>, p
 
     fun <ARGUMENT> bodyMatch(predicate: (String) -> Boolean): ARGUMENT {
         val castedPredicate = { arg: Any? -> predicate(arg as String) }
-        tempArgList + MethodStub.ArgumentMatcher(MethodStub.MatchType.BODY_MATCH, castedPredicate)
+        tempArgList + ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.BODY_MATCH, castedPredicate)
         return null as ARGUMENT
     }
 
@@ -204,12 +204,12 @@ class MethodStubDefinitionRequestContext<RESULT>(private val methodStubs: List<M
 class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<MethodStubBuilder>) {
 
     fun header(name: String, value: HeaderValue) {
-        methodStubs.forEach { it.requestHeaders += MethodStub.HeaderParameter(name, value.matcher) }
+        methodStubs.forEach { it.requestHeaders += ExecutableMethodMock.HeaderParameter(name, value.matcher) }
     }
 
-    class HeaderValue private constructor(val matcher: MethodStub.ArgumentMatcher) {
+    class HeaderValue private constructor(val matcher: ExecutableMethodMock.ArgumentMatcher) {
         companion object {
-            fun forMatcher(matcher: MethodStub.ArgumentMatcher): HeaderValue {
+            fun forMatcher(matcher: ExecutableMethodMock.ArgumentMatcher): HeaderValue {
                 return HeaderValue(matcher)
             }
         }
@@ -221,7 +221,7 @@ class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<Met
 
     fun matchNullable(predicate: (String?) -> Boolean): HeaderValue {
         val castedPredicate = { arg: Any? -> predicate(arg as String?) }
-        return HeaderValue.forMatcher(MethodStub.ArgumentMatcher(MethodStub.MatchType.MATCH, castedPredicate))
+        return HeaderValue.forMatcher(ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.MATCH, castedPredicate))
     }
 
     fun notEq(value: String): HeaderValue = matchNullable { it != value }
@@ -235,10 +235,10 @@ class MethodStubDefinitionRequestParamsContext(private val methodStubs: List<Met
 
 class MethodStubDefinitionResponseContext<RESPONSE> (
         private val apiAdapter: ApiAdapterForResponseGeneration,
-        private val methodStub: MethodStub) {
+        private val executableMethodMock: ExecutableMethodMock) {
 
     fun record() {
-        apiAdapter.recordResponse(methodStub.arguments)
+        apiAdapter.recordResponse(executableMethodMock.argumentsMatchers)
     }
 
     fun code(code: Int): RESPONSE? {
@@ -261,26 +261,26 @@ class MethodStubDefinitionResponseContext<RESPONSE> (
         return getReturnValue(apiAdapter.method)
     }
 
-    fun bodyJson(bodyProvider: BodyProvider, body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
-            apiAdapter.getObjectFromString(bodyProvider, body, templateArgs.toMap())
+    fun bodyJson(responseBodyProvider: ResponseBodyProvider, body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
+            apiAdapter.getObjectFromString(responseBodyProvider, body, templateArgs.toMap())
 
     fun bodyJson(body: String, vararg templateArgs: Pair<String, Any>): RESPONSE =
             apiAdapter.getObjectFromString(body, templateArgs.toMap())
 }
 
-data class MethodStubBuilder (private val method: Method, val arguments: List<MethodStub.ArgumentMatcher>) {
-    internal var requestHeaders: List<MethodStub.HeaderParameter> = listOf()
-    internal var responseSection:  ((ApiAdapterForResponseGeneration, Array<Any?>, MethodStub) -> Any?)? = null
+data class MethodStubBuilder (private val method: Method, val arguments: List<ExecutableMethodMock.ArgumentMatcher>) {
+    internal var requestHeaders: List<ExecutableMethodMock.HeaderParameter> = listOf()
+    internal var responseSection:  ((ApiAdapterForResponseGeneration, Array<Any?>, ExecutableMethodMock) -> Any?)? = null
     internal var isActivatedByGroups: Boolean = true
 
-    internal val methodStub: MethodStub by lazy {
-        responseSection?.let { MethodStub(method, arguments, requestHeaders, it, isActivatedByGroups) }
+    internal val executableMethodMock: ExecutableMethodMock by lazy {
+        responseSection?.let { ExecutableMethodMock(method, arguments, requestHeaders, it, isActivatedByGroups) }
                 ?: throw IllegalStateException("Haven't you forgot to add 'then' section to mock for ${method.name}")
     }
 }
 
 data class GroupBuilder (val name: String, val methodStubs: List<MethodStubBuilder>, var status: GroupStatus) {
-    internal val group: GroupOfMethodStubs by lazy { GroupOfMethodStubs(name, methodStubs.map { it.methodStub }, status) }
+    internal val group: GroupOfMethodMocks by lazy { GroupOfMethodMocks(name, methodStubs.map { it.executableMethodMock }, status) }
 
     override fun equals(other: Any?): Boolean = (this === other) || (other is GroupBuilder && other.name == name)
 
@@ -298,6 +298,6 @@ private fun <T>getReturnValue(method: Method): T? {
     }
     return result as T?
 }
-typealias BY_JACKSON = JacksonBodyProvider
-typealias BY_JERSEY = JerseyInternalBodyProvider
-typealias FROM_FILE = FileBodyProvider
+typealias BY_JACKSON = JacksonResponseBodyProvider
+typealias BY_JERSEY = JerseyInternalResponseBodyProvider
+typealias FROM_FILE = FromFileResponseBodyProvider

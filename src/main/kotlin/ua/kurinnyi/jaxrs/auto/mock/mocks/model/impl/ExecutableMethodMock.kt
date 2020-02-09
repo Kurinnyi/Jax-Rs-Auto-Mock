@@ -2,17 +2,17 @@ package ua.kurinnyi.jaxrs.auto.mock.mocks.model.impl
 
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.Utils
-import ua.kurinnyi.jaxrs.auto.mock.mocks.model.ResourceMethodStub
+import ua.kurinnyi.jaxrs.auto.mock.mocks.model.MethodMock
 import java.lang.reflect.Method
 import javax.servlet.http.HttpServletRequest
 
-open class MethodStub(
+open class ExecutableMethodMock(
         private val method: Method,
-        val arguments: List<ArgumentMatcher>,
-        private val requestHeaders: List<HeaderParameter>,
-        private val responseSection:  (ApiAdapterForResponseGeneration, Array<Any?>, MethodStub) -> Any?,
+        val argumentsMatchers: List<ArgumentMatcher>,
+        private val requestHeadersMatchers: List<HeaderParameter>,
+        private val responseSection:  (ApiAdapterForResponseGeneration, Array<Any?>, ExecutableMethodMock) -> Any?,
         private var isActivated: Boolean = true
-) : ResourceMethodStub {
+) : MethodMock {
 
     class ArgumentMatcher(internal val matchType: MatchType, internal val matcher: (Any?) -> Boolean)
 
@@ -30,21 +30,21 @@ open class MethodStub(
         isActivated = false
     }
 
-    override fun getStubbedClassName(): String = method.declaringClass.name
+    override fun getMockedClassName(): String = method.declaringClass.name
 
-    override fun isMatchingMethod(method: Method, args: Array<Any?>?, dependenciesRegistry: DependenciesRegistry): Boolean {
-        val request = dependenciesRegistry.contextSaveFilter().request
-        return method == this.method && paramMatch(args, request) && headersMatch(request) && isActivated
+    override fun isMatchingMethod(method: Method, receivedArguments: Array<Any?>?, dependenciesRegistry: DependenciesRegistry): Boolean {
+        val request = dependenciesRegistry.httpRequestResponseHolder().request
+        return method == this.method && paramMatch(receivedArguments, request) && headersMatch(request) && isActivated
     }
 
     override fun produceResponse(
             method: Method,
-            args: Array<Any?>?,
+            receivedArguments: Array<Any?>?,
             dependenciesRegistry: DependenciesRegistry): Any? {
-        val response = dependenciesRegistry.contextSaveFilter().response
-        val apiAdapter = ApiAdapterForResponseGeneration(method, response, args
+        val response = dependenciesRegistry.httpRequestResponseHolder().response
+        val apiAdapter = ApiAdapterForResponseGeneration(method, response, receivedArguments
                 ?: emptyArray(), dependenciesRegistry)
-        val responseObject =  responseSection(apiAdapter, args?: emptyArray(), this)
+        val responseObject =  responseSection(apiAdapter, receivedArguments?: emptyArray(), this)
         if (apiAdapter.shouldFlush) {
             response.flushBuffer()
         }
@@ -52,16 +52,16 @@ open class MethodStub(
     }
 
     private fun headersMatch(request: HttpServletRequest): Boolean {
-        return requestHeaders.all { (headerName, headerValue) ->
+        return requestHeadersMatchers.all { (headerName, headerValue) ->
             headerValue.matcher(request.getHeader(headerName))
         }
     }
 
     private fun paramMatch(args: Array<Any?>?, request: HttpServletRequest): Boolean {
         return if (args == null) {
-            arguments.isEmpty()
+            argumentsMatchers.isEmpty()
         } else {
-            arguments.zip(args).all { (matcher, arg) ->
+            argumentsMatchers.zip(args).all { (matcher, arg) ->
                 when (matcher.matchType) {
                     MatchType.MATCH, MatchType.IGNORE_IN_RECORD -> matcher.matcher(arg)
                     MatchType.BODY_MATCH -> matcher.matcher(Utils.bodyAsString(request))

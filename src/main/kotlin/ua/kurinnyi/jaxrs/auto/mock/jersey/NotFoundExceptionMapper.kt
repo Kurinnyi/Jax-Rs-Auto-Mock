@@ -12,9 +12,9 @@ class NotFoundExceptionMapper : ErrorHandler<NotFoundException>, ExceptionMapper
             "There is no resource interface in class path that could match request: ${getRequestUrl()}"
 
     private fun getRequestUrl(): String {
-        val request = JerseyDependenciesRegistry.contextSaveFilter().request
+        val request = JerseyDependenciesRegistry.httpRequestResponseHolder().request
         return "${request.method}:${request.requestURI}${getQueryString()}"
     }
 
-    private fun getQueryString() = JerseyDependenciesRegistry.contextSaveFilter().request.queryString?.let { "?$it" } ?: ""
+    private fun getQueryString() = JerseyDependenciesRegistry.httpRequestResponseHolder().request.queryString?.let { "?$it" } ?: ""
 }

@@ -5,15 +5,15 @@ import ua.kurinnyi.jaxrs.auto.mock.GroupSwitchService
 import ua.kurinnyi.jaxrs.auto.mock.apiv1.StubDefinitionContext
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 
-class GroupResourceImpl : StubsDefinition {
+class GroupConfigurationResourceImpl : StubsDefinition {
 
     private val groupSwitchService:GroupSwitchService by lazy { JerseyDependenciesRegistry.groupSwitchService() }
 
     override fun getStubs() = StubDefinitionContext().createStubs {
-        forClass(GroupResource::class) {
+        forClass(GroupConfigurationResource::class) {
             case { getAll() } then {
                 groupSwitchService.getAllGroups().map { group ->
-                    GroupDto(group.name(), group.status(), group.stubsCount())
+                    GroupDto(group.name(), group.status(), group.mocksCount())
                 }.sortedBy { group -> group.status }
             }
 

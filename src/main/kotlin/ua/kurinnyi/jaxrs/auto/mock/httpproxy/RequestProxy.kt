@@ -5,19 +5,19 @@ import org.apache.http.client.methods.*
 import org.apache.http.entity.InputStreamEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
-import ua.kurinnyi.jaxrs.auto.mock.filters.ContextSaveFilter
+import ua.kurinnyi.jaxrs.auto.mock.filters.HttpRequestResponseHolder
 import java.io.InputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletRequest
 
 
-class RequestProxy(private val contextSaveFilter: ContextSaveFilter) {
+class RequestProxy(private val httpRequestResponseHolder: HttpRequestResponseHolder) {
 
     private val client = HttpClients.createDefault()
 
     fun forwardRequest(path: String) {
-        val servletRequest = contextSaveFilter.request
-        val servletResponse = contextSaveFilter.response
+        val servletRequest = httpRequestResponseHolder.request
+        val servletResponse = httpRequestResponseHolder.response
         val url = formatNewUrl(path, servletRequest)
         println("Proxying request ${servletRequest.method}:$url")
         val httpRequest = getHttpRequest(url, servletRequest)

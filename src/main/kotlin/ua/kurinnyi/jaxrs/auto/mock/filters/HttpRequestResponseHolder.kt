@@ -4,7 +4,7 @@ import javax.servlet.*
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-class ContextSaveFilter : Filter {
+class HttpRequestResponseHolder : Filter {
 
     private val requestHolder = ThreadLocal<BufferingRequestWrapper>()
     private val responseHolder = ThreadLocal<HttpServletResponse>()
