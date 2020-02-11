@@ -1,7 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import org.reflections.Reflections
-import ua.kurinnyi.jaxrs.auto.mock.endpoint.GroupResourceImpl
 
 class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
 
@@ -23,5 +22,5 @@ class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
     }
 
     private fun isInternalInstance(it: Class<out StubsDefinition>) =
-            it.name == GroupResourceImpl::class.java.name
+            it.`package`.name.startsWith("ua.kurinnyi.jaxrs.auto.mock.")
 }
