@@ -1,6 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
 import org.reflections.Reflections
+import java.lang.reflect.Modifier
 
 class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
 
@@ -8,6 +9,7 @@ class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
         return reflections.getSubTypesOf(StubsDefinition::class.java)
                 .asSequence()
                 .filterNot (::isInternalInstance)
+                .filterNot (::isAbstract)
                 .map {
                     try {
                         it.getConstructor()
@@ -23,4 +25,7 @@ class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
 
     private fun isInternalInstance(it: Class<out StubsDefinition>) =
             it.`package`.name.startsWith("ua.kurinnyi.jaxrs.auto.mock.")
+
+    private fun isAbstract(it: Class<out StubsDefinition>) =
+            Modifier.isAbstract(it.modifiers)
 }

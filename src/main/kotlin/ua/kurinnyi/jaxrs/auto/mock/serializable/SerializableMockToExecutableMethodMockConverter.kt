@@ -20,7 +20,7 @@ class SerializableMockToExecutableMethodMockConverter {
 
     private fun getResponse(response: SerializableMethodMock.Response, apiAdapterForResponseGeneration: ApiAdapterForResponseGeneration): Any? {
         response.code?.let { apiAdapterForResponseGeneration.setResponseCode(it) }
-        response.headers?.forEach { apiAdapterForResponseGeneration.header(it.name, it.value) }
+        response.headers?.forEach { apiAdapterForResponseGeneration.setResponseHeader(it.name, it.value) }
         return response.body?.let { apiAdapterForResponseGeneration.getObjectFromString(it, emptyMap()) }
     }
 
