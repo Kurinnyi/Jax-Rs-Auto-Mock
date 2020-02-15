@@ -30,7 +30,7 @@ class ApiAdapter(
     }
 
     fun bodyRaw(body: String) {
-        IOUtils.write(body, response.writer)
+        IOUtils.write(body, response.outputStream)
         shouldFlush = true
     }
 
