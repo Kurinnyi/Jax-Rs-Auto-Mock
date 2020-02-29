@@ -14,14 +14,18 @@ object Utils {
     }
 
     fun <T> getReturnValue(method: Method): T? {
-        val result =  when (method.returnType) {
-            Int::class.java -> 0
-            Long::class.java -> 0L
-            Double::class.java -> 0.0
-            Float::class.java -> false
-            Boolean::class.java -> false
+        return getReturnValue<T>(method.returnType)
+    }
+
+    fun <T> getReturnValue(type: Class<*>?): T {
+        val result = when (type) {
+            Int::class.java, java.lang.Integer::class.java -> 0
+            Long::class.java, java.lang.Long::class.java -> 0L
+            Double::class.java, java.lang.Double::class.java -> 0.0
+            Float::class.java, java.lang.Float::class.java -> false
+            Boolean::class.java, java.lang.Boolean::class.java -> false
             else -> null
         }
-        return result as T?
+        return result as T
     }
 }

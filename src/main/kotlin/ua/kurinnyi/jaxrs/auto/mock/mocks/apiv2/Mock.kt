@@ -43,7 +43,7 @@ abstract class Mock<Resource : Any>(val definition: Context<Resource>.(Resource)
 class Context<Resource>(private val clazz: Class<Resource>) {
 
     internal var priority = 0
-    private var tempArgList: MutableList<ExecutableMethodMock.ArgumentMatcher> = mutableListOf()
+    var _tempArgList: MutableList<ExecutableMethodMock.ArgumentMatcher> = mutableListOf()
     private var captors: MutableList<Captor<Any?>?> = mutableListOf()
     internal var methodMocksUnderConstruction: MutableList<MethodMockBuilder> = mutableListOf()
     private var groupsUnderConstruction: MutableList<GroupBuilder> = mutableListOf()
@@ -55,9 +55,9 @@ class Context<Resource>(private val clazz: Class<Resource>) {
 
     val instance = Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { _, method, args ->
         checkAllArgumentsSetUp(args, method)
-        val methodMockBuilder = MethodMockBuilder(method, tempArgList, captors)
+        val methodMockBuilder = MethodMockBuilder(method, _tempArgList, captors)
         methodMocksUnderConstruction.add(methodMockBuilder)
-        tempArgList = mutableListOf()
+        _tempArgList = mutableListOf()
         captors = mutableListOf()
         groupsUnderConstruction.forEach { group -> group.methodMocks.add(methodMockBuilder) }
         methodMockBuilder.isActivatedByGroups = groupsUnderConstruction
@@ -133,106 +133,93 @@ class Context<Resource>(private val clazz: Class<Resource>) {
     }
 
     fun <T> T.header(name: String, value: String?): T {
-        if (tempArgList.isEmpty()) {
+        if (_tempArgList.isEmpty()) {
             eq(value)
         }
         methodMocksUnderConstruction.forEach {
-            it.requestHeaders += ExecutableMethodMock.HeaderParameter(name, tempArgList.last())
+            it.requestHeaders += ExecutableMethodMock.HeaderParameter(name, _tempArgList.last())
         }
-        tempArgList = mutableListOf()
+        _tempArgList = mutableListOf()
         return this
     }
 
     fun <ARGUMENT> eq(argument: ARGUMENT): ARGUMENT {
+        if (argument == null) {
+            throw IllegalArgumentException("Please use 'isNull' instead")
+        }
         matchNullable<ARGUMENT?> { it == argument }
         return argument
     }
 
-    fun <ARGUMENT> notEq(argument: ARGUMENT): ARGUMENT {
+    fun <ARGUMENT> notEq(argument: ARGUMENT): ARGUMENT? {
+        if (argument == null) {
+            throw IllegalArgumentException("Please use 'notNull' instead")
+        }
         matchNullable<ARGUMENT?> { it != argument }
         return argument
     }
 
-    fun <ARGUMENT> any(): ARGUMENT = matchNullable { true }
-    fun anyBoolean(): Boolean = matchPrimitive({ true }, true)
-    fun anyInt(): Int = matchPrimitive({ true }, 0)
-    fun anyDouble(): Double = matchPrimitive({ true }, 0.0)
-    fun anyLong(): Long = matchPrimitive({ true }, 0L)
-
-    fun anyBooleanInRecord(): Boolean = ignoreInRecordPrimitive(true)
-    fun anyIntInRecord(): Int = ignoreInRecordPrimitive(0)
-    fun anyDoubleInRecord(): Double = ignoreInRecordPrimitive(0.0)
-    fun anyLongInRecord(): Long = ignoreInRecordPrimitive(0L)
-
-    fun <ARGUMENT> isNull(): ARGUMENT = matchNullable { it == null }
-
-    fun <ARGUMENT> notNull(): ARGUMENT = matchNullable { it != null }
-
-    fun <ARGUMENT> anyInRecord(): ARGUMENT {
-        val castedPredicate = { arg: Any? -> true }
-        tempArgList.add(ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.IGNORE_IN_RECORD, castedPredicate))
-        return null as ARGUMENT
+    fun <ARGUMENT> notNullAndNotEq(argument: ARGUMENT): ARGUMENT {
+        if (argument == null) {
+            throw IllegalArgumentException("Please use 'notNull' instead")
+        }
+        matchNullable<ARGUMENT?> { it != null && it != argument }
+        return argument
     }
 
-    fun <ARGUMENT> matchNullable(predicate: (ARGUMENT?) -> Boolean): ARGUMENT {
-        val castedPredicate = { arg: Any? -> predicate(arg as ARGUMENT) }
-        tempArgList.add(ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.MATCH, castedPredicate))
-        return null as ARGUMENT
+    fun <ARGUMENT> any(): ARGUMENT? {
+        return matchNullable { true }
     }
 
-    fun <ARGUMENT> match(predicate: (ARGUMENT) -> Boolean): ARGUMENT = matchNullable { it != null && predicate(it) }
-
-    fun matchBoolean(predicate: (Boolean) -> Boolean): Boolean {
-        matchNullable<Boolean?> { it != null && predicate(it) }
-        return true
+    fun <ARGUMENT> isNull(): ARGUMENT? {
+        return matchNullable { it == null }
     }
 
-    fun matchInt(predicate: (Int) -> Boolean): Int {
-        matchNullable<Int?> { it != null && predicate(it) }
-        return 0
+    inline fun <reified ARGUMENT> notNull(): ARGUMENT {
+        matchNullable<ARGUMENT> { it != null }
+        return Utils.getReturnValue(ARGUMENT::class.java)
     }
 
-    fun matchDouble(predicate: (Double) -> Boolean): Double {
-        matchNullable<Double?> { it != null && predicate(it) }
-        return 0.0
+    inline fun <reified ARGUMENT> match(crossinline predicate: (ARGUMENT) -> Boolean): ARGUMENT {
+        matchNullable<ARGUMENT> { it != null && predicate(it) }
+        return Utils.getReturnValue(ARGUMENT::class.java)
     }
 
-    fun matchLong(predicate: (Long) -> Boolean): Long {
-        matchNullable<Long?> { it != null && predicate(it) }
-        return 0L
-    }
-
-    private fun <ARGUMENT> matchPrimitive(predicate: (ARGUMENT?) -> Boolean, arg: ARGUMENT): ARGUMENT {
-        matchNullable(predicate)
-        return arg
-    }
-
-    private fun <ARGUMENT> ignoreInRecordPrimitive(arg: ARGUMENT): ARGUMENT {
-        anyInRecord<ARGUMENT>()
-        return arg
-    }
-
-    fun <ARGUMENT> bodyMatch(predicate: (String) -> Boolean): ARGUMENT {
-        val castedPredicate = { arg: Any? -> predicate(arg as String) }
-        tempArgList.add(ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.BODY_MATCH, castedPredicate))
-        return null as ARGUMENT
-    }
-
-    fun <ARGUMENT> bodyMatchRegex(regex: String): ARGUMENT =
+    fun <ARGUMENT> bodyMatchRegex(regex: String): ARGUMENT? =
             bodyMatch { regex.toRegex().matches(it) }
 
-    fun <ARGUMENT> bodySameJson(body: String): ARGUMENT =
+    fun <ARGUMENT> bodySameJson(body: String): ARGUMENT? =
             bodyMatch { Utils.trimToSingleSpaces(body) == Utils.trimToSingleSpaces(it) }
 
+    inline fun <reified ARGUMENT> anyInRecord(): ARGUMENT {
+        val castedPredicate = { arg: Any? -> true }
+        _tempArgList.add(ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.IGNORE_IN_RECORD, castedPredicate))
+        return Utils.getReturnValue(ARGUMENT::class.java)
+    }
+
+    fun <ARGUMENT> matchNullable(predicate: (ARGUMENT?) -> Boolean): ARGUMENT? {
+        val castedPredicate = { arg: Any? -> predicate(arg as ARGUMENT) }
+        _tempArgList.add(ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.MATCH, castedPredicate))
+        return null as ARGUMENT
+    }
+
+    fun <ARGUMENT> bodyMatch(predicate: (String) -> Boolean): ARGUMENT? {
+        val castedPredicate = { arg: Any? -> predicate(arg as String) }
+        _tempArgList.add(ExecutableMethodMock.ArgumentMatcher(ExecutableMethodMock.MatchType.BODY_MATCH, castedPredicate))
+        return null as ARGUMENT
+    }
+
     internal fun addCaptor(captor: Captor<Any?>) {
-        while (captors.size < tempArgList.size - 1) {
+        if (_tempArgList.isEmpty())
+            throw IllegalStateException("Captor is used incorrectly. It should wrap argument matcher like 'captorName(any())'.")
+        while (captors.size < _tempArgList.size - 1) {
             captors.add(null)
         }
         captors.add(captor)
     }
 
     private fun checkAllArgumentsSetUp(args: Array<Any>?, method: Method) {
-        if (args != null && tempArgList.size < args.size) {
+        if (args != null && _tempArgList.size < args.size) {
             throw IllegalArgumentException("Not all parameters of method: ${method.name} are " +
                     "called with matchers. Use match methods like 'eq','any' etc for all the parameters")
         }
