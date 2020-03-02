@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
 class StubServer {
 
     private val reflections = Reflections()
-    private var contextPathsConfiguration:ContextPathsConfiguration = ByPackageContextPathConfiguration(emptyList())
+    private var contextPathsConfiguration:ContextPathsConfiguration = ByPackageContextPathConfiguration()
 
     private val defaultContextPath = "/"
     private var port = 8080
