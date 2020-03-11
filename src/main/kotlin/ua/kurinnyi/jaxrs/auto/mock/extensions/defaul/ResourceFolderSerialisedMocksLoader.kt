@@ -1,7 +1,10 @@
 package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
 import org.apache.commons.io.IOUtils
-import ua.kurinnyi.jaxrs.auto.mock.extensions.SerialisedMocksFilesLoader
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerialisedMocksLoader
+import ua.kurinnyi.jaxrs.auto.mock.extensions.SerializableObjectMapper
+import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableMethodMock
+import ua.kurinnyi.jaxrs.auto.mock.serializable.SerializableMocksHolder
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
@@ -9,10 +12,12 @@ import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.streams.toList
 
-class ResourceFolderSerialisedMocksFilesLoader(private val filesExtension: String) : SerialisedMocksFilesLoader {
+class ResourceFolderSerialisedMocksLoader(private val filesExtension: String) : SerialisedMocksLoader {
 
-    override fun reloadFilesAsStrings(): List<String> =
-            getFolderPath()?.let(::readAllFilesContentInFolder) ?: emptyList()
+    override fun reloadMocks(serializableObjectMapper: SerializableObjectMapper): List<SerializableMethodMock> {
+        val files = getFolderPath()?.let(::readAllFilesContentInFolder) ?: emptyList()
+        return files.flatMap { serializableObjectMapper.read(it, SerializableMocksHolder::class.java).stubs }
+    }
 
     private fun getFolderPath(): Path? {
         val resource = javaClass.classLoader.getResource("mocks/") ?: return null

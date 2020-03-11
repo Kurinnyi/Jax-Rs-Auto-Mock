@@ -40,7 +40,7 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
     var recordSaver: RecordSaver = ConsoleRecordSaver()
     var httpResponseDecoders: List<HttpResponseDecoder> = listOf()
     var proxyConfiguration: ProxyConfiguration = ForwardWhenNothingMatchedProxyConfiguration()
-    var serialisedMocksFilesLoader: SerialisedMocksFilesLoader = ResourceFolderSerialisedMocksFilesLoader(".yaml")
+    var serialisedMocksLoader: SerialisedMocksLoader = ResourceFolderSerialisedMocksLoader(".yaml")
     var stubDefinitions: List<StubsDefinition> = emptyList()
     var defaultResponseBodyProvider: ResponseBodyProvider = ResourceFolderFilesResponseBodyProvider(jacksonBodyProvider)
 
@@ -53,8 +53,8 @@ object JerseyDependenciesRegistry : DependenciesRegistry {
     private val serialisationUtils: SerialisationUtils by lazy {
         SerialisationUtils(defaultResponseBodyProvider, TemplateEngine())
     }
-    val serializableMocksLoader: SerializableMocksLoader by lazy {
-        SerializableMocksLoader(serialisedMocksFilesLoader, serializableMocksObjectMapper, SerializableMockToExecutableMethodMockConverter())
+    val serializableMocksLoadingStubsDefinition: SerializableMocksLoadingStubsDefinition by lazy {
+        SerializableMocksLoadingStubsDefinition(serialisedMocksLoader, serializableMocksObjectMapper, SerializableMockToExecutableMethodMockConverter())
     }
 
     data class CommonDependencies(val proxyConfiguration: ProxyConfiguration,

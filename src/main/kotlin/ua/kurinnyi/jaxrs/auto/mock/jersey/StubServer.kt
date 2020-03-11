@@ -174,13 +174,13 @@ class StubServer {
     }
 
     /**
-     * Specifies the way to load files containing serialized mocks.
-     * Default implementation is [ResourceFolderSerialisedMocksFilesLoader] configured to load yaml files from resource folder of application.
-     * Other implementation might for example, read mock files from other folders or external storage.
-     * @param filesLoader - loads serialized mock files
+     * Specifies the way to load serialized mocks.
+     * Default implementation is [ResourceFolderSerialisedMocksLoader] configured to load yaml files from resource folder of application.
+     * Other implementation might for example, read mock from other folders or external storage.
+     * @param loader - loads serialized mocks
      */
-    fun withSerialisedMocksFilesLoader(filesLoader: SerialisedMocksFilesLoader): StubServer = this.also {
-        JerseyDependenciesRegistry.serialisedMocksFilesLoader = filesLoader
+    fun withSerialisedMocksLoader(loader: SerialisedMocksLoader): StubServer = this.also {
+        JerseyDependenciesRegistry.serialisedMocksLoader = loader
     }
 
     /**
@@ -217,7 +217,7 @@ class StubServer {
         val tomcat = Tomcat()
         tomcat.setPort(port)
         addStubDefinition(GroupConfigurationResourceImpl())
-        addStubDefinition(JerseyDependenciesRegistry.serializableMocksLoader)
+        addStubDefinition(JerseyDependenciesRegistry.serializableMocksLoadingStubsDefinition)
         JerseyDependenciesRegistry.stubDefinitions = getStubDefinitions()
         enabledByDefaultGroups.forEach { JerseyDependenciesRegistry.groupSwitchService().switchGroupStatus(it, GroupStatus.ACTIVE) }
         getResourceInterfacesToContextMapping(ignoredResources).forEach { contextPath, interfaces ->
