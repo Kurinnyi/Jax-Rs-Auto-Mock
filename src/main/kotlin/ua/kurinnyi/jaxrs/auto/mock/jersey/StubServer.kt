@@ -50,7 +50,7 @@ class StubServer {
 
     /**
      * Specifies the TCP port to run the server on it.
-     * Default value is 8080
+     * Default value is 8080.
      * @param port - the TCP port.
      */
     fun onPort(port: Int): StubServer = this.apply {
@@ -58,7 +58,7 @@ class StubServer {
     }
 
     /**
-     * Specifies the package to be scanned by Jersey for JAX-RS providers
+     * Specifies the package to be scanned by Jersey for JAX-RS providers.
      * @param packageName - package name to be scanned.
      */
     fun addPackageToScanForProviders(packageName: String): StubServer = this.apply {
@@ -66,7 +66,7 @@ class StubServer {
     }
 
     /**
-     * Specifies JAX-RS provider class to be used by Jersey
+     * Specifies JAX-RS provider class to be used by Jersey.
      * @param clazz - JAX-RS provider class.
      */
     fun addProviderClassToRegister(clazz: Class<*>): StubServer = this.apply {
@@ -75,7 +75,7 @@ class StubServer {
 
     /**
      * Explicitly add StubsDefinition. Makes sense only when [withDisabledAutoDiscoveryOfStubDefinition] is invoked
-     * or when this StubsDefinition does not have constructor with no arguments
+     * or when this StubsDefinition does not have constructor with no arguments.
      * @param stubDefinition - stubDefinition to be used.
      */
     fun addStubDefinition(stubDefinition: StubsDefinition): StubServer = this.apply {
@@ -124,9 +124,9 @@ class StubServer {
     /**
      * Provides configuration class to resolve context paths of resource interfaces.
      * By default all resource are resolve to root context path '/'.
-     * The configuration is used only once for each resource interface on the start of the server
+     * The configuration is used only once for each resource interface on the start of the server.
      * Use [ByPackageContextPathConfiguration] as ready to use configuration implementation. Or implement your own.
-     * @param contextPathsConfiguration - configuration class to resolve context paths
+     * @param contextPathsConfiguration - configuration class to resolve context paths.
      */
     fun withContextPathConfiguration(contextPathsConfiguration: ContextPathsConfiguration): StubServer = this.apply {
         this.contextPathsConfiguration = contextPathsConfiguration
@@ -137,7 +137,7 @@ class StubServer {
      * should be recorder for further replay.
      * Default implementation is [ForwardWhenNothingMatchedProxyConfiguration].
      * This configuration can work together with proxy/record methods from mocks api. Or it can override them.
-     * @param - proxyConfiguration configuration class to make decisions on proxy/record functionality
+     * @param - proxyConfiguration configuration class to make decisions on proxy/record functionality.
      */
     fun withProxyConfiguration(proxyConfiguration: ProxyConfiguration): StubServer = this.also {
         JerseyDependenciesRegistry.proxyConfiguration = proxyConfiguration
@@ -148,7 +148,7 @@ class StubServer {
      * When proxying request to some external system, response might be encoded in some way.
      * To be able to record it as a text, it should be decoded.
      * This method allows to specify such decoders.
-     * @param decoderHttp - decoder of HTTP response body
+     * @param decoderHttp - decoder of HTTP response body.
      */
     fun addHttpResponseDecoder(decoderHttp: HttpResponseDecoder): StubServer = this.also {
         JerseyDependenciesRegistry.httpResponseDecoders += decoderHttp
@@ -158,7 +158,7 @@ class StubServer {
      * Specifies the way to save records.
      * By default records are written into console output.
      * Other implementations might for example, write records into some files or send them to external storage.
-     * @param saver - saves mock records
+     * @param saver - saves mock records.
      */
     fun withRecordsSaver(saver: RecordSaver): StubServer = this.also {
         JerseyDependenciesRegistry.recordSaver = saver
@@ -166,8 +166,8 @@ class StubServer {
 
     /**
      * Specifies the way to serialize/deserialize mocks.
-     * Default implementation is [YamlObjectMapper] which can process mocks in yaml format
-     * @param objectMapper - serialize/deserialize mocks
+     * Default implementation is [YamlObjectMapper] which can process mocks in yaml format.
+     * @param objectMapper - serialize/deserialize mocks.
      */
     fun withSerializableObjectMapper(objectMapper: SerializableObjectMapper): StubServer = this.also {
         JerseyDependenciesRegistry.serializableMocksObjectMapper = objectMapper
@@ -177,7 +177,7 @@ class StubServer {
      * Specifies the way to load serialized mocks.
      * Default implementation is [ResourceFolderSerialisedMocksLoader] configured to load yaml files from resource folder of application.
      * Other implementation might for example, read mock from other folders or external storage.
-     * @param loader - loads serialized mocks
+     * @param loader - loads serialized mocks.
      */
     fun withSerialisedMocksLoader(loader: SerialisedMocksLoader): StubServer = this.also {
         JerseyDependenciesRegistry.serialisedMocksLoader = loader
@@ -191,7 +191,7 @@ class StubServer {
      * mechanism. Uses registered JAX-RS providers. Use [JerseyDependenciesRegistry.jerseyInternalBodyProvider] to get it.
      * [ResourceFolderFilesResponseBodyProvider] - load matching file from resource folder and use other provider to deserialize it.
      * Other implementations might for example, read response files from other folders or external storage or deserialize other formats.
-     * @param responseBodyProvider - provides response body from string
+     * @param responseBodyProvider - provides response body from string.
      */
     fun withDefaultResponseBodyProvider(responseBodyProvider: ResponseBodyProvider): StubServer = this.also {
         JerseyDependenciesRegistry.defaultResponseBodyProvider = responseBodyProvider

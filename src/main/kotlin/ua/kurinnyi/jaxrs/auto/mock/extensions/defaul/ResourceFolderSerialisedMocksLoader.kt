@@ -12,6 +12,12 @@ import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.streams.toList
 
+/**
+ * This class is used to load serializable mocks.
+ * It search for all files with [filesExtension] extension in resource/mocks folder.
+ * And then deserialize them with provided [SerializableObjectMapper].
+ * @param filesExtension - types of files to search and read.
+ */
 class ResourceFolderSerialisedMocksLoader(private val filesExtension: String) : SerialisedMocksLoader {
 
     override fun reloadMocks(serializableObjectMapper: SerializableObjectMapper): List<SerializableMethodMock> {

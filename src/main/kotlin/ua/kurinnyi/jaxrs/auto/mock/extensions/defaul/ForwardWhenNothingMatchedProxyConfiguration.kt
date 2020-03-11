@@ -2,6 +2,12 @@ package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
 import ua.kurinnyi.jaxrs.auto.mock.extensions.ProxyConfiguration
 
+/**
+ * This class makes decision whether request should be proxied to external system, and whether request/response
+ * should be recorder for further replay.
+ * It only proxy request to the classes that was specified in [addClassForProxy] method and only when no mocks found for the request.
+ * It only records requests to the classes that was specified in [addClassForRecord] method.
+ */
 open class ForwardWhenNothingMatchedProxyConfiguration : ProxyConfiguration {
     private val classesToBeProxied:MutableMap<String, String> = hashMapOf()
     private val classesToBeRecorded:MutableSet<String> = mutableSetOf()
