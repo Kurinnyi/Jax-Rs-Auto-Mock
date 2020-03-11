@@ -25,22 +25,21 @@ class StubDefinitionsExecutor(stubDefinitions: List<StubsDefinition>, proxyConfi
     private fun loadHotMockDataAndMerge(hotReloadableStubs: List<StubsDefinition>, proxyConfiguration: ProxyConfiguration): LoadedMockData {
         val hotLoadedMocks = executeStubsDefinitions(hotReloadableStubs, proxyConfiguration)
         return LoadedMockData(
-                staticLoadedMockData.mocks + hotLoadedMocks.mocks,
+                (staticLoadedMockData.mocksWithPriority + hotLoadedMocks.mocksWithPriority),
                 mergeGroups(hotLoadedMocks.groups + staticLoadedMockData.groups),
                 staticLoadedMockData.groupsCallbacks + hotLoadedMocks.groupsCallbacks)
     }
 
     private fun executeStubsDefinitions(stubs: List<StubsDefinition>, proxyConfiguration: ProxyConfiguration): LoadedMockData {
-        val definitions: List<CompleteMocksData> = stubs.asSequence().map { it to it.getStubs() }
-                .sortedBy { (definition, _) -> definition.getPriority() }
-                .map { (_, mocksData) -> mocksData }.toList()
-        definitions.forEach {
+        val definitions: List<Pair<CompleteMocksData, Int>> = stubs.asSequence()
+                .map { it.getStubs() to it.getPriority() }.toList()
+        definitions.map { it.first }.forEach {
             it.proxyConfig.proxyClasses.forEach { (clazz, path) -> proxyConfiguration.addClassForProxy(clazz, path) }
             it.proxyConfig.recordClasses.forEach { clazz -> proxyConfiguration.addClassForRecord(clazz) }
         }
         return LoadedMockData(
-                definitions.flatMap { definition -> definition.methodMocks },
-                mergeGroups(definitions.flatMap { definition -> definition.groups }),
+                definitions.flatMap { (mockData, priority) -> mockData.methodMocks.map { MockWithPriority(it, priority) } },
+                mergeGroups(definitions.flatMap { (mockData, _) -> mockData.groups }),
                 stubs.flatMap { it.getGroupsCallbacks() })
     }
 
@@ -49,7 +48,16 @@ class StubDefinitionsExecutor(stubDefinitions: List<StubsDefinition>, proxyConfi
                 .map { (name, groupsToMerge) ->  GroupsAggregation(name, groupsToMerge)}
     }
 
-    data class LoadedMockData(val mocks: List<MethodMock>, val groups: List<Group>, val groupsCallbacks: List<GroupCallback>)
+    data class LoadedMockData(
+            val mocksWithPriority: List<MockWithPriority>,
+            val groups: List<Group>,
+            val groupsCallbacks: List<GroupCallback>) {
+        val mocks:List<MethodMock> by lazy {
+            mocksWithPriority.sortedBy { it.priority }.map { it.mock }
+        }
+    }
+
+    data class MockWithPriority(val mock:MethodMock, val priority: Int)
 
     data class GroupsAggregation(val name: String, val groups: List<Group>) : Group {
         override fun name(): String = name
