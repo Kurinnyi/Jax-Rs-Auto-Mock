@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.mocks.apiv2
+package ua.kurinnyi.jaxrs.auto.mock.apiv2
 
 class Example : Mock<HelloRestResourceInterface>({ mock ->
 

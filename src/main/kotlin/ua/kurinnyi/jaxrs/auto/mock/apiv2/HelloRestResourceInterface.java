@@ -1,4 +1,4 @@
-package ua.kurinnyi.jaxrs.auto.mock.mocks.apiv2;
+package ua.kurinnyi.jaxrs.auto.mock.apiv2;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
