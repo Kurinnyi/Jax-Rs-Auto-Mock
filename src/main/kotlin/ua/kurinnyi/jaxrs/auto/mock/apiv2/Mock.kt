@@ -168,7 +168,7 @@ class Context<Resource>(private val clazz: Class<Resource>) {
      * Matcher method. It matches against raw incoming http request body.
      * Mock matches when http body is equal to provided body. Indentations on both sides are ignored.
      */
-    fun <ARGUMENT> bodySameJson(body: String): ARGUMENT? = bodyMatch { trimToSingleSpaces(body) == trimToSingleSpaces(it) }
+    fun <ARGUMENT> bodySame(body: String): ARGUMENT? = bodyMatch { trimToSingleSpaces(body) == trimToSingleSpaces(it) }
 
     /**
      * Matcher method. It matches against raw incoming http request body.
@@ -283,7 +283,7 @@ class ResponseContext<Response>(
 
     /**
      * Writes the provided body as the response directly.
-     * Please consider using [ResponseContext.bodyJson] methods instead, as this one does not ensure any type safety.
+     * Please consider using [ResponseContext.body] methods instead, as this one does not ensure any type safety.
      * It makes sense to use it with [ResponseContext.code] to provide some unusual errors.
      */
     fun bodyRaw(body: String): Response? {
@@ -299,7 +299,7 @@ class ResponseContext<Response>(
      * @param body - Response object serialized as string or path to the file with such information.
      * @param templateArgs - argument to be passed to the template, before deserializing.
      */
-    fun bodyJson(body: String, vararg templateArgs: Pair<String, Any>): Response =
+    fun body(body: String, vararg templateArgs: Pair<String, Any>): Response =
             apiAdapter.getObjectFromString(body, templateArgs.toMap())
 
     /**
@@ -310,7 +310,7 @@ class ResponseContext<Response>(
      * @param body - Response object serialized as string or path to the file with such information.
      * @param templateArgs - argument to be passed to the template, before deserializing.
      */
-    fun bodyJson(bodyProvider: ResponseBodyProvider, body: String, vararg templateArgs: Pair<String, Any>): Response =
+    fun body(bodyProvider: ResponseBodyProvider, body: String, vararg templateArgs: Pair<String, Any>): Response =
             apiAdapter.getObjectFromString(bodyProvider, body, templateArgs.toMap())
 
     /**
