@@ -53,7 +53,7 @@ class StubDefinitionsExecutor(stubDefinitions: List<StubsDefinition>, proxyConfi
             val groups: List<Group>,
             val groupsCallbacks: List<GroupCallback>) {
         val mocks:List<MethodMock> by lazy {
-            mocksWithPriority.sortedBy { it.priority }.map { it.mock }
+            mocksWithPriority.sortedByDescending { it.priority }.map { it.mock }
         }
     }
 
