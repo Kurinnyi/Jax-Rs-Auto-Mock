@@ -1,8 +1,8 @@
 # Jax-Rs-Auto-Mock
 This project provides a glue code and simple declarative DSL to quickly create 
-and run Service virtualization server that matches jax-rs interface contract.
+and run Service Virtualization server that matches jax-rs interface contract.
 <br>
-For more information, please refer to the example project https://github.com/Kurinnyi/Jax-Rs-Auto-Mock-Example<br>
+For a working example, please refer to the example project https://github.com/Kurinnyi/Jax-Rs-Auto-Mock-Example<br>
 ### Use cases of the project
 Common`JAX-RS` REST service contains so-called `Resource` - classes or interfaces with annotations.
 ```java
@@ -218,6 +218,10 @@ class MockExample : Mock<HelloRestResourceInterface>({ mock ->
         mock.getHello(eq("Ivan"), notNull()).respond {
             "Hello Ivan from group1"
         }
+        
+        mock.getHello(notNull(), notNull()).respond {
+            "Some other mock in group"
+        }
     }
 
     group("group2") {
@@ -228,6 +232,7 @@ class MockExample : Mock<HelloRestResourceInterface>({ mock ->
 })
 ```
 If not specified explicitly, the group is turned on by default.<br>
+Group can wrap any number of mocks. 
 The same group name can be used any number of times in same or different mock files.<br>
 To turn on some groups, send PUT request with the list like bellow to endpoint `${your_mock_server_url}/group`.
 ```json
