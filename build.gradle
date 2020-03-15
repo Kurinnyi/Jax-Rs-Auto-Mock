@@ -16,7 +16,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "1.2.71"
 }
 
-version = '0.4.2'
+version = '0.5.0'
 group = "ua.kurinnyi.jaxrs.auto.mock"
 sourceCompatibility = 1.8
 
@@ -25,6 +25,11 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+}
+
+task sourceJar(type: Jar, dependsOn: classes) {
+    classifier 'sources'
+    from sourceSets.main.allSource
 }
 
 dependencies {
