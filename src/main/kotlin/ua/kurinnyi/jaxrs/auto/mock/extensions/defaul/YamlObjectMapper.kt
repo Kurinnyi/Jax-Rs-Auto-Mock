@@ -5,6 +5,11 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import ua.kurinnyi.jaxrs.auto.mock.extensions.SerializableObjectMapper
 
+
+/**
+ * This class is used to serialize/deserialize mocks in Yaml format.
+ * It use Jackson under the hood.
+ */
 class YamlObjectMapper : SerializableObjectMapper {
     private val yamlObjectMapper = ObjectMapper(YAMLFactory()).registerModule(KotlinModule())
 

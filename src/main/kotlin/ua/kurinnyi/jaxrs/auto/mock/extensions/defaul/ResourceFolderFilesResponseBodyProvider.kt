@@ -5,6 +5,12 @@ import ua.kurinnyi.jaxrs.auto.mock.MockNotFoundException
 import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
 import java.lang.reflect.Type
 
+/**
+ * This implementation loads the file mentioned in [bodyInformation] from resource folder
+ * and deserialize it with wrapped [responseBodyProvider].
+ * To trigger loading bodyInformation should start with "/" following the rest of the path.
+ * Otherwise it is considered to be a content and returned directly.
+ */
 class ResourceFolderFilesResponseBodyProvider(private val responseBodyProvider: ResponseBodyProvider): ResponseBodyProvider {
     override fun <T> provideBodyObjectFromString(type: Class<T>, genericType: Type, bodyString: String):T =
         responseBodyProvider.provideBodyObjectFromString(type, genericType, bodyString)
