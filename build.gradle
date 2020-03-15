@@ -27,6 +27,11 @@ repositories {
     }
 }
 
+task sourceJar(type: Jar, dependsOn: classes) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
 dependencies {
     testCompile 'junit:junit:4.12'
     compile 'org.apache.tomcat.embed:tomcat-embed-core:8.0.15'
