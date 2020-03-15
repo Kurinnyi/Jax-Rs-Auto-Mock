@@ -46,7 +46,11 @@ class ContextState<Resource>(clazz: Class<Resource>) {
             val captors = it.captors
             it.responseSection = { apiAdapter, args, methodStub ->
                 captors.forEachIndexed { i, captor -> captor?.valueHolder?.set(args[i]) }
-                response(ResponseContext(apiAdapter, methodStub.argumentsMatchers))
+                try {
+                    response(ResponseContext(apiAdapter, methodStub.argumentsMatchers))
+                } finally {
+                    captors.forEach { captor -> captor?.valueHolder?.remove() }
+                }
             }
         }
         checkReturnTypesOfMockedMethods()
