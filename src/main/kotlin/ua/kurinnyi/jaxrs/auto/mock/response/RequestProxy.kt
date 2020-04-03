@@ -9,6 +9,7 @@ import ua.kurinnyi.jaxrs.auto.mock.filters.HttpRequestResponseHolder
 import java.io.InputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 
 class RequestProxy(private val httpRequestResponseHolder: HttpRequestResponseHolder) {
@@ -24,9 +25,15 @@ class RequestProxy(private val httpRequestResponseHolder: HttpRequestResponseHol
         addRequestHeaders(servletRequest, httpRequest)
         val response = client.execute(httpRequest)
         servletResponse.status = response.statusLine.statusCode
-        response.allHeaders.forEach{ servletResponse.setHeader(it.name, it.value)}
+        addResponseHeaders(response, servletResponse)
         response.entity?.let { safeCopy(it.content, servletResponse.outputStream) }
         servletResponse.flushBuffer()
+    }
+
+    private fun addResponseHeaders(response: CloseableHttpResponse, servletResponse: HttpServletResponse) {
+        response.allHeaders
+                .filterNot { it.name.toLowerCase() in setOf("transfer-encoding", "date") }
+                .forEach { servletResponse.setHeader(it.name, it.value) }
     }
 
     private fun addRequestHeaders(request: HttpServletRequest, httpPost: HttpRequestBase) {
