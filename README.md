@@ -1,4 +1,4 @@
-# Jax-Rs-Auto-Mock
+# Jaramy (Service virtualization for JAX-RS)
 This project provides a glue code and simple declarative DSL to quickly create 
 and run Service Virtualization server that matches jax-rs interface contract.
 <br>
