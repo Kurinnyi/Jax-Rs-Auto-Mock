@@ -1,6 +1,6 @@
 package ua.kurinnyi.jaxrs.auto.mock.filters
 
-import javax.servlet.*
+import jakarta.servlet.*
 
 class ResponseIntersectingFilter : Filter {
 

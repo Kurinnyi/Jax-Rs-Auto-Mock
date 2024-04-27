@@ -1,8 +1,8 @@
 package ua.kurinnyi.jaxrs.auto.mock.jersey
 
 import ua.kurinnyi.jaxrs.auto.mock.MockNotFoundException
-import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
+import jakarta.ws.rs.ext.ExceptionMapper
+import jakarta.ws.rs.ext.Provider
 
 
 @Provider

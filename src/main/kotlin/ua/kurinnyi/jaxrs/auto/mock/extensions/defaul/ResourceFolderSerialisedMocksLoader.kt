@@ -29,9 +29,8 @@ class ResourceFolderSerialisedMocksLoader(private val filesExtension: String) : 
         val resource = javaClass.classLoader.getResource("mocks/") ?: return null
         val uri = resource.toURI()
         return if ("jar" == uri.scheme) {
-            FileSystems.newFileSystem(uri, emptyMap<String, Any>(), null).use {
-                it.getPath("mocks/")
-            }
+            val fs = FileSystems.newFileSystem(uri, emptyMap<String, Any>(), null)
+            return fs.getPath("mocks/")
         } else {
             Paths.get(uri)
         }
@@ -40,7 +39,7 @@ class ResourceFolderSerialisedMocksLoader(private val filesExtension: String) : 
     private fun readAllFilesContentInFolder(it: Path) = Files.walk(it).use { files -> readAllFilesContent(files) }
 
     private fun readAllFilesContent(files: Stream<Path>): List<String> =
-            files.filter { it.toString().toLowerCase().endsWith(filesExtension) }
+            files.filter { it.toString().lowercase().endsWith(filesExtension) }
                     .map { IOUtils.toString(Files.newBufferedReader(it)) }
                     .toList()
 }

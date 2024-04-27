@@ -4,7 +4,7 @@ import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.Utils
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.MethodMock
 import java.lang.reflect.Method
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 open class ExecutableMethodMock(
         private val method: Method,

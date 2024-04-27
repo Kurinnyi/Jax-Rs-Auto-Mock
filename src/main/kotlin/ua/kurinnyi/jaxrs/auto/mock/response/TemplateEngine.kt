@@ -1,7 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock.response
 
-import com.mitchellbosecke.pebble.PebbleEngine
-import com.mitchellbosecke.pebble.loader.StringLoader
+import io.pebbletemplates.pebble.PebbleEngine
+import io.pebbletemplates.pebble.loader.StringLoader
 import java.io.StringWriter
 
 

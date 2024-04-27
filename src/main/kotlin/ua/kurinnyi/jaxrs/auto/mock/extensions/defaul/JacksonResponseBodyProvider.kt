@@ -2,7 +2,6 @@ package ua.kurinnyi.jaxrs.auto.mock.extensions.defaul
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
-import ua.kurinnyi.jaxrs.auto.mock.mocks.SerialisationUtils
 import java.lang.reflect.Type
 
 /**

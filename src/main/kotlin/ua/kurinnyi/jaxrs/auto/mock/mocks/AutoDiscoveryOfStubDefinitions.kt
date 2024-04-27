@@ -1,21 +1,28 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
-import org.reflections.Reflections
+import io.github.classgraph.ClassGraph
+import org.slf4j.LoggerFactory
 import java.lang.reflect.Modifier
 
-class AutoDiscoveryOfStubDefinitions(private val reflections: Reflections){
-
+class AutoDiscoveryOfStubDefinitions {
+    private val logger = LoggerFactory.getLogger(AutoDiscoveryOfStubDefinitions::class.java)
     fun getStubDefinitions(): List<StubsDefinition> {
-        return reflections.getSubTypesOf(StubsDefinition::class.java)
-                .asSequence()
-                .filterNot (::isInternalInstance)
-                .filterNot (::isAbstract)
+        return ClassGraph()
+                .enableAllInfo()
+                .scan().use { scanResult ->
+                    scanResult.getClassesImplementing(StubsDefinition::class.java)
+                            .map { it.loadClass() }
+                            .map { it as Class<StubsDefinition> }
+                }.asSequence()
+                .onEach { logger.info("Found stub definition {}", it.name) }
+                .filterNot(::isInternalInstance)
+                .filterNot(::isAbstract)
                 .map {
                     try {
                         it.getConstructor()
                     } catch (e: NoSuchMethodException) {
-                        System.err.println("Class ${it.name} has no empty constructor so you should manually add it. " +
-                                "As it would not work with auto discovery")
+                        logger.error("Class {} has no empty constructor so you should manually add it. " +
+                                "As it would not work with auto discovery", it.name)
                         null
                     }
                 }.filterNotNull()

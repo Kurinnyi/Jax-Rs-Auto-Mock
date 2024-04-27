@@ -1,12 +1,20 @@
 package ua.kurinnyi.jaxrs.auto.mock.jersey
 
-import org.reflections.Reflections
-import javax.ws.rs.Path
+import io.github.classgraph.ClassGraph
+import jakarta.ws.rs.Path
+import org.slf4j.LoggerFactory
 
-class AutoDiscoveryOfResourceInterfaces(private val reflections: Reflections, private val ignoredResources: Set<Class<*>>) {
 
+class AutoDiscoveryOfResourceInterfaces(private val ignoredResources: Set<Class<*>>) {
+    private val logger = LoggerFactory.getLogger(AutoDiscoveryOfResourceInterfaces::class.java)
     fun getInterfacesToMock(): List<Class<*>> {
-        return reflections.getTypesAnnotatedWith(Path::class.java)
+        return ClassGraph()
+                .enableAllInfo()
+                .scan().use { scanResult ->
+                    scanResult.getClassesWithAnnotation(Path::class.java)
+                            .map { it.loadClass() }
+                }
+                .onEach { logger.info("Found resource with path annotation {}", it.name) }
                 .filter { it.isInterface }
                 .filter { !ignoredResources.contains(it) }
     }

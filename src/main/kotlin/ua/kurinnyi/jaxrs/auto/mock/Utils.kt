@@ -1,8 +1,7 @@
 package ua.kurinnyi.jaxrs.auto.mock
 
 import java.lang.reflect.Method
-import java.lang.reflect.Parameter
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 
 object Utils {
     fun trimToSingleSpaces(body: String): String {

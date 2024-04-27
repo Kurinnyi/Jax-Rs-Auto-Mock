@@ -1,6 +1,5 @@
 package ua.kurinnyi.jaxrs.auto.mock.mocks
 
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl
 import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.response.TemplateEngine
 import java.lang.reflect.Type
@@ -51,11 +50,10 @@ class SerialisationUtils(
     fun <T> getObjectFromString(objectInfo:String, templateArgs: Map<String, Any>, type: Class<T>, genericType: Type): T {
         return getObjectFromString(defaultResponseBodyProvider, objectInfo, templateArgs, type, genericType)
     }
+    inline fun <reified KEY, reified VALUE> _mapType(): ParametrizedTypeImpl =
+            ParametrizedTypeImpl(arrayOf(KEY::class.java, VALUE::class.java), Map::class.java)
 
-    inline fun <reified KEY, reified VALUE> _mapType():ParameterizedTypeImpl =
-            ParameterizedTypeImpl.make(Map::class.java, arrayOf(KEY::class.java, VALUE::class.java), null)
-
-    inline fun <reified T> _listType():ParameterizedTypeImpl =
-            ParameterizedTypeImpl.make(List::class.java, arrayOf(T::class.java), null)
+    inline fun <reified T> _listType():ParametrizedTypeImpl =
+            ParametrizedTypeImpl(arrayOf(T::class.java), List::class.java)
 
 }

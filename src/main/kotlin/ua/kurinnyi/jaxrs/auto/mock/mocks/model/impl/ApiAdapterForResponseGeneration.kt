@@ -5,7 +5,7 @@ import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.extensions.ResponseBodyProvider
 import ua.kurinnyi.jaxrs.auto.mock.response.Recorder
 import java.lang.reflect.Method
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 class ApiAdapterForResponseGeneration(
         val method: Method,

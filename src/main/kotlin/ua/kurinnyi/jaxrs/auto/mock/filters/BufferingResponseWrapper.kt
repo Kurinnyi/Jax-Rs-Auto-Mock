@@ -1,10 +1,10 @@
 package ua.kurinnyi.jaxrs.auto.mock.filters
 
 import java.io.ByteArrayOutputStream
-import javax.servlet.ServletOutputStream
-import javax.servlet.WriteListener
-import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.HttpServletResponseWrapper
+import jakarta.servlet.ServletOutputStream
+import jakarta.servlet.WriteListener
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponseWrapper
 
 class BufferingResponseWrapper(response: HttpServletResponse) : HttpServletResponseWrapper(response) {
 

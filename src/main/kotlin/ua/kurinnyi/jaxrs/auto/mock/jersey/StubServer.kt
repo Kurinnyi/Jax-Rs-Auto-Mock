@@ -1,12 +1,13 @@
 package ua.kurinnyi.jaxrs.auto.mock.jersey
 
+import jakarta.servlet.Filter
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.util.descriptor.web.FilterDef
 import org.apache.tomcat.util.descriptor.web.FilterMap
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
-import org.reflections.Reflections
+import org.slf4j.LoggerFactory
 import ua.kurinnyi.jaxrs.auto.mock.DependenciesRegistry
 import ua.kurinnyi.jaxrs.auto.mock.extensions.*
 import ua.kurinnyi.jaxrs.auto.mock.extensions.defaul.*
@@ -18,7 +19,6 @@ import ua.kurinnyi.jaxrs.auto.mock.mocks.SerialisationUtils
 import ua.kurinnyi.jaxrs.auto.mock.mocks.StubsDefinition
 import ua.kurinnyi.jaxrs.auto.mock.mocks.model.GroupStatus
 import java.io.File
-import javax.servlet.Filter
 import kotlin.reflect.KClass
 
 /**
@@ -26,7 +26,7 @@ import kotlin.reflect.KClass
  * Use it's methods to amend behaviour of the system and use [start] method to launch it.
  * It works in a next way:
  * - After the start the [DependenciesRegistry] is constructed and the [onDependenciesRegistryReady] callback is executed.
- * - Each interface in classpath annotated with [javax.ws.rs.Path] which is not explicitly disabled, is autodiscover instantiated and registered
+ * - Each interface in classpath annotated with [jakarta.ws.rs.Path] which is not explicitly disabled, is autodiscover instantiated and registered
  * in Jersey runtime.
  * - JAX-RS providers are found and registered in Jersey runtime.
  * - Tomcat server with Jersey in launched.
@@ -34,11 +34,10 @@ import kotlin.reflect.KClass
  * - Server tries to match incoming requests with mocks and use their responses.
  */
 class StubServer {
-
-    private val reflections = Reflections()
+    private val logger = LoggerFactory.getLogger(StubServer::class.java)
     private var contextPathsConfiguration:ContextPathsConfiguration = ByPackageContextPathConfiguration()
 
-    private val defaultContextPath = "/"
+    private val defaultContextPath = ""
     private var port = 8080
     private val packagesToScan = mutableListOf<String>()
     private val classesToRegister = mutableSetOf<Class<*>>()
@@ -100,7 +99,7 @@ class StubServer {
     }
 
     /**
-     * Specifies the interface annotated with [javax.ws.rs.Path] to be not registered in Jersey.
+     * Specifies the interface annotated with [jakarta.ws.rs.Path] to be not registered in Jersey.
      * Useful when there are clashes like 'A resource model has ambiguous (sub-)resource method for HTTP method ...'
      * and one of this resources is not needed to be mocked.
      * If all clashing resources should be mocked, consider moving them on different context paths with [withContextPathConfiguration] method.
@@ -111,7 +110,7 @@ class StubServer {
     }
 
     /**
-     * Specifies the interface annotated with [javax.ws.rs.Path] to be not registered in Jersey
+     * Specifies the interface annotated with [jakarta.ws.rs.Path] to be not registered in Jersey
      * Useful when there are clashes like 'A resource model has ambiguous (sub-)resource method for HTTP method ...'
      * and one of this resources is not needed to be mocked.
      * If all clashing resources should be mocked, consider moving them on different context paths with [withContextPathConfiguration] method.
@@ -214,13 +213,16 @@ class StubServer {
      * The thread invoking this method will be blocked infinitely.
      */
     fun start() {
+        logger.info("Starting the server")
         val tomcat = Tomcat()
         tomcat.setPort(port)
+        tomcat.getConnector()
         addStubDefinition(GroupConfigurationResourceImpl())
         addStubDefinition(JerseyDependenciesRegistry.serializableMocksLoadingStubsDefinition)
         JerseyDependenciesRegistry.stubDefinitions = getStubDefinitions()
         enabledByDefaultGroups.forEach { JerseyDependenciesRegistry.groupSwitchService().switchGroupStatus(it, GroupStatus.ACTIVE) }
         getResourceInterfacesToContextMapping(ignoredResources).forEach { contextPath, interfaces ->
+            logger.info("adding context {}", contextPath)
             addContext(tomcat, interfaces, contextPath)
         }
         dependencyRegistryReadyCallback(JerseyDependenciesRegistry)
@@ -240,7 +242,7 @@ class StubServer {
         addFilter(context, BufferingFilter())
         addFilter(context, JerseyDependenciesRegistry.httpRequestResponseHolder())
         addFilter(context, JerseyDependenciesRegistry.responseIntersectingFilter)
-        context.addServletMapping("/*", "jersey-container-servlet")
+        context.addServletMappingDecoded("/*", "jersey-container-servlet")
     }
 
     private fun registerResources(resourceLoader: ResourceConfig, interfacesToMock: List<Class<*>>) {
@@ -250,7 +252,7 @@ class StubServer {
     }
 
     private fun getResourceInterfacesToContextMapping(ignoredResources: Set<Class<*>>): Map<String, List<Class<*>>> {
-        return AutoDiscoveryOfResourceInterfaces(reflections, ignoredResources).getInterfacesToMock()
+        return AutoDiscoveryOfResourceInterfaces(ignoredResources).getInterfacesToMock()
                 .groupBy { clazz -> contextPathsConfiguration.getContextPathsForResource(clazz) ?: defaultContextPath }
     }
 
@@ -267,7 +269,7 @@ class StubServer {
 
     private fun getStubDefinitions(): List<StubsDefinition> {
         if (autoDiscoveryOfStubDefinitions)
-            return stubDefinitions + AutoDiscoveryOfStubDefinitions(reflections).getStubDefinitions()
+            return stubDefinitions + AutoDiscoveryOfStubDefinitions().getStubDefinitions()
         else
             return stubDefinitions
     }
