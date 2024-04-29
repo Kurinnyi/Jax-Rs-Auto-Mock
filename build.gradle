@@ -13,6 +13,7 @@ buildscript {
 plugins {
     id 'java-library'
     id "org.jetbrains.kotlin.jvm" version "1.9.22"
+    id 'maven-publish'
 }
 
 version = '0.5.2'
@@ -21,15 +22,14 @@ sourceCompatibility = 17
 
 repositories {
     mavenCentral()
-    flatDir {
-        dirs 'libs'
+    maven {
+        url = uri("https://maven.pkg.github.com/kurinnyi/ua")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
     }
 }
-
-//task sourceJar(type: Jar, dependsOn: classes) {
-//    classifier 'sources'
-//    from sourceSets.main.allSource
-//}
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
@@ -52,7 +52,7 @@ dependencies {
     implementation "io.pebbletemplates:pebble:3.2.2"
     implementation "org.slf4j:slf4j-simple:2.0.13"
     implementation "org.slf4j:slf4j-api:2.0.13"
-    implementation "ua.kurinnyi.kotlin:pattern-matching:0.1"
+    implementation "ua.kurinnyi.kotlin:pattern-matching:0.1.2"
 }
 
 
@@ -64,3 +64,23 @@ jar {
     from "LICENSE"
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = group
+            artifactId = 'jax-rs-auto-mock'
+            version
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/kurinnyi/jax-rs-auto-mock"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
